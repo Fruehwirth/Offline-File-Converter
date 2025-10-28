@@ -3,7 +3,7 @@
  * Orchestrates the entire conversion workflow
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useConversionStore } from '../features/state/useConversionStore'
 import { Header } from '../components/Header'
 import { EmptyState } from '../components/EmptyState'
@@ -13,7 +13,6 @@ import { Toast } from '../components/Toast'
 import { convertImage } from '../features/conversion/imageProcessing'
 import { convertAudio } from '../features/conversion/audioProcessing'
 import { generateOutputFilename } from '../features/conversion/fileNamer'
-import { downloadFiles } from '../features/conversion/download'
 import { announceToScreenReader } from '../utils/accessibility'
 import { getFormat, type FormatId } from '../features/conversion/formatRegistry'
 import { findCommonTargets } from '../features/conversion/commonDenominators'
@@ -39,9 +38,6 @@ function detectFormatFromMime(mimeType: string): FormatId | null {
 }
 
 export function App() {
-  const [downloadProgress, setDownloadProgress] = useState(0)
-  const [isDownloading, setIsDownloading] = useState(false)
-
   // Prevent default drag & drop behavior on the entire page
   useEffect(() => {
     const preventDefaults = (e: DragEvent) => {
@@ -72,7 +68,6 @@ export function App() {
 
   const hasFiles = files.length > 0
   const canConvert = hasFiles && selectedTargetFormat && !isConverting
-  const hasResults = files.some(f => f.status === 'completed')
 
   const handleConvert = async () => {
     if (!canConvert) return
@@ -173,31 +168,6 @@ export function App() {
     announceToScreenReader(`Conversion complete. ${successCount} file(s) converted.`)
   }
 
-  const handleDownloadAll = async () => {
-    const completedFiles = files.filter(f => f.status === 'completed' && f.result)
-
-    if (completedFiles.length === 0) return
-
-    const allResults = completedFiles.flatMap(f => f.result ?? [])
-
-    try {
-      setIsDownloading(true)
-      setDownloadProgress(0)
-
-      await downloadFiles(allResults, 'auto', progress => {
-        setDownloadProgress(progress)
-      })
-    } catch (error) {
-      addToast({
-        type: 'error',
-        message: 'Download failed',
-      })
-    } finally {
-      setIsDownloading(false)
-      setDownloadProgress(0)
-    }
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-brand-bg">
       <Header />
@@ -210,90 +180,28 @@ export function App() {
             {/* File list with integrated DropZone */}
             <FileList />
 
-            {/* Target format selector with integrated options menu */}
-            <TargetFormatSelector disabled={isConverting} />
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <button
-                onClick={handleConvert}
-                disabled={!canConvert}
-                className={`
-                  px-8 py-4 rounded-brand font-semibold text-lg
-                  transition-all
-                  focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
-                  ${
-                    canConvert
-                      ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
-                      : 'bg-brand-bg-secondary text-brand-text-secondary cursor-not-allowed'
-                  }
-                `}
-              >
-                {isConverting ? (
-                  <span className="flex items-center gap-3">
-                    <svg
-                      className="animate-spin h-6 w-6"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Converting...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-3">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Convert
-                  </span>
-                )}
-              </button>
-
-              {hasResults && files.length > 1 && (
+            {/* Target format selector with integrated options menu and convert button */}
+            <TargetFormatSelector
+              disabled={isConverting}
+              actionButton={
                 <button
-                  onClick={handleDownloadAll}
-                  disabled={isConverting || isDownloading}
-                  className="
-                    px-6 py-4 rounded-brand font-medium text-lg
-                    bg-brand-bg-secondary hover:bg-brand-bg-hover
-                    text-brand-text border border-brand-border
-                    transition-colors relative overflow-hidden
+                  onClick={handleConvert}
+                  disabled={!canConvert}
+                  className={`
+                    px-8 py-4 rounded-brand font-semibold text-lg
+                    transition-all
                     focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
+                    ${
+                      canConvert
+                        ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
+                        : 'bg-brand-bg-secondary text-brand-text-secondary cursor-not-allowed'
+                    }
+                  `}
                 >
-                  {/* Progress background overlay */}
-                  {isDownloading && (
-                    <div
-                      className="absolute inset-0 bg-blue-400/20 dark:bg-blue-500/20 transition-all duration-200"
-                      style={{
-                        width: `${downloadProgress}%`,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center gap-2">
-                    {isDownloading && (
+                  {isConverting ? (
+                    <span className="flex items-center gap-3">
                       <svg
-                        className="animate-spin h-5 w-5"
+                        className="animate-spin h-6 w-6"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -312,14 +220,29 @@ export function App() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                    )}
-                    {isDownloading
-                      ? `Preparing... ${Math.round(downloadProgress)}%`
-                      : 'Download All'}
-                  </span>
+                      Converting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Convert
+                    </span>
+                  )}
                 </button>
-              )}
-            </div>
+              }
+            />
           </div>
         )}
       </main>

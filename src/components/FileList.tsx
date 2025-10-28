@@ -6,7 +6,7 @@
 
 import { useConversionStore } from '../features/state/useConversionStore'
 import { formatBytes } from '../utils/bytes'
-import { downloadBlob } from '../features/conversion/download'
+import { downloadBlob, downloadFiles } from '../features/conversion/download'
 import { DropZone } from './DropZone'
 import { useEffect, useState, useRef } from 'react'
 import { AnimatedFilename } from './AnimatedFilename'
@@ -201,6 +201,10 @@ export function FileList() {
   const removeFile = useConversionStore(state => state.removeFile)
   const clearFiles = useConversionStore(state => state.clearFiles)
   const isConverting = useConversionStore(state => state.isConverting)
+  const addToast = useConversionStore(state => state.addToast)
+
+  const [downloadProgress, setDownloadProgress] = useState(0)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   if (files.length === 0) {
     return null
@@ -216,8 +220,37 @@ export function FileList() {
     })
   }
 
+  const handleDownloadAll = async () => {
+    const completedFiles = files.filter(f => f.status === 'completed' && f.result)
+
+    if (completedFiles.length === 0) return
+
+    const allResults = completedFiles.flatMap(f => f.result ?? [])
+
+    try {
+      setIsDownloading(true)
+      setDownloadProgress(0)
+
+      await downloadFiles(allResults, 'auto', progress => {
+        setDownloadProgress(progress)
+      })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: 'Download failed',
+      })
+    } finally {
+      setIsDownloading(false)
+      setDownloadProgress(0)
+    }
+  }
+
   // Count files by status for concurrent processing indicator
   const processingCount = files.filter(f => f.status === 'processing').length
+
+  // Check if all files are converted
+  const allFilesConverted =
+    files.length > 1 && files.every(f => f.status === 'completed' && f.result)
 
   return (
     <div className="space-y-4">
@@ -285,7 +318,104 @@ export function FileList() {
       </div>
 
       {/* Compact DropZone for adding more files - Always visible, disabled during conversion */}
-      <DropZone disabled={isConverting} />
+      {allFilesConverted ? (
+        <div className="flex items-stretch gap-3">
+          {/* DropZone takes remaining space */}
+          <div className="flex-1">
+            <DropZone disabled={isConverting} />
+          </div>
+
+          {/* Download All Button with slide and expand animation */}
+          <button
+            onClick={handleDownloadAll}
+            disabled={isConverting || isDownloading}
+            className="
+              py-4 rounded-brand font-medium text-lg
+              bg-brand-bg-secondary hover:bg-brand-bg-hover
+              text-brand-text border border-brand-border
+              transition-colors relative overflow-hidden
+              focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+              disabled:opacity-50 disabled:cursor-not-allowed
+              animate-slideExpand
+            "
+            style={{ minWidth: '200px' }}
+          >
+            {/* Progress background overlay */}
+            {isDownloading && (
+              <div
+                className="absolute inset-0 bg-blue-400/20 dark:bg-blue-500/20 transition-all duration-200"
+                style={{
+                  width: `${downloadProgress}%`,
+                }}
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
+              {isDownloading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Preparing... {Math.round(downloadProgress)}%
+                </>
+              ) : (
+                <>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  Download All
+                </>
+              )}
+            </span>
+          </button>
+        </div>
+      ) : (
+        <DropZone disabled={isConverting} />
+      )}
+
+      <style>{`
+        @keyframes slideExpand {
+          0% {
+            opacity: 0;
+            transform: translateX(20px) scaleX(0.8);
+            max-width: 0;
+            padding-left: 0;
+            padding-right: 0;
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scaleX(1);
+            max-width: 300px;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+          }
+        }
+        
+        .animate-slideExpand {
+          animation: slideExpand 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
     </div>
   )
 }
@@ -372,7 +502,7 @@ function FileListItem({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
               <AnimatedFilename
                 originalName={file.file.name}
@@ -406,9 +536,6 @@ function FileListItem({
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                 Converting... {Math.round(displayProgress)}%
               </p>
-            )}
-            {file.status === 'completed' && file.result && (
-              <p className="text-xs text-brand-success font-medium">✓ Converted</p>
             )}
 
             {/* Actions */}

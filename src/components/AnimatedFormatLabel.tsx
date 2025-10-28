@@ -52,9 +52,10 @@ export function AnimatedFormatLabel({
         <>
           {/* Old label falling down */}
           <span
-            className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block"
+            className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block whitespace-nowrap"
             style={{
               animation: 'fallDown 0.2s ease-in forwards',
+              minWidth: '150px',
             }}
           >
             {getFormatLabel(sourceFormat)}
@@ -62,17 +63,21 @@ export function AnimatedFormatLabel({
 
           {/* New label falling in from above */}
           <span
-            className="absolute left-0 top-0 px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block"
+            className="absolute left-0 top-0 px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block whitespace-nowrap"
             style={{
               animation: 'fallIn 0.2s ease-out forwards',
               opacity: 0,
+              minWidth: '150px',
             }}
           >
             {getFormatLabel(targetFormat)}
           </span>
         </>
       ) : (
-        <span className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent">
+        <span
+          className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent whitespace-nowrap"
+          style={{ minWidth: '150px' }}
+        >
           {displayLabel}
         </span>
       )}
