@@ -1,16 +1,16 @@
 ---
-description: Detailed specification for the slide-out drawer UI that allows users to select target file formats for conversion. Use this when implementing or modifying the format picker functionality.
+description: Detailed specification for the slide-out drawer UI that allows users to select target file formats for conversion. Integrated with the dynamic button system at the bottom of the application.
 alwaysApply: false
-alias: 'Shelf, Pick File Type '
+alias: 'Shelf, Pick File Type, Format Picker'
 ---
 
 # FileType Picker - Slide-Out Drawer Specification
 
 ## Overview
 
-The FileType Picker is implemented as a **slide-out drawer** that appears above the main action button. It uses a click-to-toggle pattern rather than hover, providing better UX especially on touch devices.
+The FileType Picker is implemented as a **slide-out drawer** that appears above the dynamic button system. It uses a click-to-toggle pattern rather than hover, providing better UX especially on touch devices.
 
-**Design Standard**: All animations must be buttery smooth, satisfying, and modern - using glassy/frosted effects with subtle transparency for a polished feel.
+**Design Standard**: All animations must be buttery smooth, satisfying, and modern - using pill-shaped buttons with rounded corners for a modern, polished feel.
 
 ## Architecture
 
@@ -22,9 +22,14 @@ App.tsx (Main Container)
 │   ├── File Items
 │   └── "Add More Files" Button (at end of list)
 ├── Hidden <input type="file">
-└── Fixed Bottom Section
-    ├── Drawer (Format Selector + Cancel)
-    └── Pick Filetype / Convert Button
+└── Fixed Bottom Section (z-50)
+    ├── Frosted Glass Backdrop (pointer-events: none)
+    ├── Drawer Container (z-10, behind buttons)
+    │   └── Drawer (Format Selector + Cancel)
+    └── Dynamic Button System (z-20, above drawer)
+        ├── Main Convert/Pick Button
+        ├── Convert Again Button (icon only)
+        └── Download Button
 ```
 
 ### State Management
@@ -94,29 +99,35 @@ disabled={availableTargets.length === 0 && !isConverting}
 disabled={!canConvert && !isConverting && (!availableTargets.length || selectedTargetFormat === null)}
 ```
 
-### Drawer Animation (Overlay)
+### Drawer Animation
 
 ```tsx
 className={`
-  absolute left-0 right-0 bottom-full mb-4 z-50
+  absolute left-0 right-0 bottom-0 z-10
   transition-all duration-300 ease-out overflow-hidden origin-bottom
-  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0
-    ? 'max-h-[500px]'
-    : 'max-h-0'}
+  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 
+    ? 'max-h-[500px] pointer-events-auto' 
+    : 'max-h-0 pointer-events-none'}
 `}
 ```
 
-- **Absolutely positioned**: `absolute left-0 right-0 bottom-full` positions it as an overlay above the button
-- **No document flow impact**: Drawer doesn't push or move the file list when opening/closing
-- Uses `max-height` transition (not height) for smooth slide animation
-- No opacity transition - purely slides out/in without fading
-- `origin-bottom` ensures animation starts from bottom (slides up from button when opening)
-- `overflow-hidden` prevents content overflow during animation
-- `mb-4` creates spacing between drawer and button (fixed spacing, not conditional)
-- `z-50` ensures drawer appears above file list content
-- `shadow-lg` adds depth to show it's floating above content
-- Parent container must have `relative` positioning
-- Drawer only shows if: drawer is open AND no format selected AND targets available
+**Positioning**:
+- **Behind buttons**: `z-10` (buttons are z-20)
+- **Bottom-aligned**: `bottom-0` with container margins
+- **Grows upward**: Drawer expands vertically from bottom when opened
+- Uses `max-height` transition (not height) for smooth animation
+- `origin-bottom` ensures animation starts from bottom edge
+- `overflow-hidden` prevents content from showing during collapse
+
+**Interaction**:
+- `pointer-events-auto` when open (drawer is clickable)
+- `pointer-events-none` when closed (doesn't block button clicks)
+- Drawer only visible if: `isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0`
+
+**Layout Integration**:
+- Drawer grows behind the button system
+- Button system (z-20) always stays on top
+- Smooth 300ms transition matches button animations
 
 ### Auto-Close on Selection
 

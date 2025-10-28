@@ -1,0 +1,247 @@
+---
+description: 'Specification for the dynamic, width-sliding button system at the bottom of the application. Defines behavior, animation requirements, and layout constraints for context-dependent button transitions.'
+alwaysApply: false
+---
+
+# Dynamic Button System Specification
+
+## Overview
+
+The application requires a dynamic button system that smoothly transitions between different button configurations based on application state. The system must maintain visual consistency, smooth animations, and zero layout shift during transitions.
+
+## Core Requirements
+
+### CR-1: Button Configuration States
+
+The button system must support multiple configurations that appear based on application state:
+
+- **Initial State**: Single full-width action button
+- **Processing State**: Button shows progress indication while maintaining full width
+- **Completed State**: Two buttons appear - a fixed-width icon button and a flexible-width action button
+
+### CR-2: Width-Based Sliding Animations
+
+**Requirement**: Buttons must slide horizontally during state transitions
+
+- Transitions occur via smooth width changes, not scale/bounce effects
+- Animation must be physics-based with spring characteristics
+- Height remains constant (72px) during all transitions
+- No vertical movement or layout shift
+
+**Animation Parameters**:
+
+- Spring stiffness: 300-400
+- Damping: 30-35
+- Mass: 0.5-0.8
+- Target: Buttery smooth, 60fps performance
+
+### CR-3: Zero-Space Collapse
+
+**Requirement**: When buttons are not visible, they must occupy exactly 0 pixels
+
+- Collapsed buttons must not affect layout of visible buttons
+- All spacing properties animate to 0 when collapsed:
+  - Width: 0
+  - Padding: 0 (all sides)
+  - Margin: 0 (all sides)
+  - Border width: 0
+  - Opacity: 0
+
+**Visual Requirement**: Visible buttons must occupy 100% of available container width
+
+### CR-4: Pill-Shaped Design
+
+All buttons must have maximum rounded corners (fully pill-shaped) in all states
+
+### CR-5: No Transparency in Solid Elements
+
+**Requirement**: Button backgrounds and progress indicators must use solid colors
+
+- Background colors: No alpha/transparency values
+- Progress bars: Solid colors only
+- Hover states: Solid color transitions
+
+**Exception**: Opacity animations during collapse/expand are permitted for smooth transitions
+
+### CR-6: Overflow Behavior
+
+**Requirement**: Buttons must not shrink below their minimum content size
+
+- If insufficient width available, buttons overflow (clip) rather than compress
+- Text and icons maintain readability
+- Container applies `overflow: hidden` to clip overflowing content
+- Buttons have `flex-shrink: 0` to prevent compression
+
+### CR-7: Button Spacing
+
+**Requirement**: When multiple buttons are visible, maintain consistent gap
+
+- Gap between buttons: 12px (0.75rem)
+- Gap must be 0 when buttons are collapsed
+- Gap animates smoothly with button width transitions
+
+### CR-8: Focus and Accessibility
+
+- Buttons must be keyboard accessible
+- Focus states visible but must not affect layout (no offset rings)
+- Disabled states clearly indicated via opacity
+- Screen reader announcements for state changes
+
+## Button Specifications
+
+### Primary Action Button
+
+**Purpose**: Main conversion/action trigger
+**States**:
+
+- Visible: Not all files converted
+- Collapsed: All files converted
+  **Width**: 100% of container when visible
+  **Content**: Icon + text label (except when showing progress)
+
+### Icon Action Button (Convert Again)
+
+**Purpose**: Trigger repeat conversion
+**States**:
+
+- Collapsed: Not all files converted
+- Visible: All files converted
+  **Width**: Fixed 72px (square, equal to height)
+  **Content**: Icon only, centered
+
+### Secondary Action Button (Download)
+
+**Purpose**: Download converted files
+**States**:
+
+- Collapsed: Not all files converted
+- Visible: All files converted
+  **Width**: Flexible, fills remaining space after icon button + gap
+  **Content**: Icon + text label
+
+## Animation Sequence
+
+### Transition: Single Button → Two Buttons
+
+1. Primary button width animates from 100% to 0
+2. Primary button padding/margin/border animate to 0
+3. Primary button opacity fades to 0
+4. Simultaneously:
+   - Icon button width animates from 0 to 72px
+   - Icon button padding/border animate to visible values
+   - Icon button opacity fades to 1
+5. Simultaneously:
+   - Secondary button width animates from 0 to flex-fill
+   - Secondary button padding/border animate to visible values
+   - Secondary button margin-left animates to 12px (gap)
+   - Secondary button opacity fades to 1
+
+**Timing**: All animations occur simultaneously with spring physics
+
+### Transition: Two Buttons → Single Button
+
+Reverse of above sequence
+
+## Layout Container Requirements
+
+- Position: Fixed to bottom of viewport
+- Z-index: Above content (z-20)
+- Max-width: 630px
+- Padding: 16px horizontal
+- Height: Fixed 72px
+- Overflow: Hidden
+- Display: Flex with gap: 0
+
+## Progress Indication
+
+### Progress Bar Requirements
+
+**Visual**: Horizontal bar overlay
+**Position**: Absolute, fills button from left to right
+**Color**: Solid (no transparency)
+**Width**: Animates based on progress percentage (0-100%)
+**Transition**: Smooth width animation (300ms)
+**Z-index**: Below button text/icons
+
+### Progress States
+
+- Converting: Show percentage in button label
+- Downloading: Show "Preparing..." in button label
+- Completed: No progress bar visible
+
+## Non-Functional Requirements
+
+### NFR-1: Performance
+
+- Animations must maintain 60fps
+- No janky or stuttering transitions
+- Efficient re-renders (avoid unnecessary calculations)
+
+### NFR-2: Responsiveness
+
+- System must work on all viewport widths
+- Buttons adapt to container width
+- Touch-friendly sizing (72px height)
+
+### NFR-3: Maintainability
+
+- Button configurations easily extensible
+- Animation parameters configurable
+- State-driven rendering (no manual DOM manipulation)
+
+## Edge Cases
+
+### EC-1: Rapid State Changes
+
+If state changes rapidly during animation, new animation should:
+
+- Interrupt current animation smoothly
+- Transition from current position to new target
+- Not reset or snap to intermediate states
+
+### EC-2: Insufficient Width
+
+If container width < minimum required width (72px + 12px + 150px):
+
+- Buttons maintain minimum size
+- Content clips via overflow:hidden
+- No text wrapping or compression
+
+### EC-3: Very Long Text Labels
+
+- Text uses `whitespace: nowrap`
+- Overflowing text clips
+- Icons never clip (use `shrink-0`)
+
+## Testing Criteria
+
+### TC-1: Visual Smoothness
+
+- All transitions appear smooth and fluid
+- No visible stuttering or frame drops
+- Spring motion feels natural and satisfying
+
+### TC-2: Layout Stability
+
+- No layout shift when buttons transition
+- Container height remains exactly 72px
+- Visible buttons always fill 100% width
+
+### TC-3: Zero-Space Collapse
+
+- Collapsed buttons measure exactly 0px width in DOM
+- No phantom spacing from collapsed buttons
+- Primary button full width when others collapsed
+
+### TC-4: Color Consistency
+
+- No unexpected transparency or alpha values
+- Progress bars clearly visible
+- Button colors match design tokens
+
+### TC-5: Interaction States
+
+- Buttons respond to hover correctly
+- Disabled states prevent interaction
+- Focus states visible and accessible
+- Click handlers fire appropriately for visible buttons only

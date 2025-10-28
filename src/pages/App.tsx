@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useConversionStore } from '../features/state/useConversionStore'
 import { useSettingsStore } from '../features/state/useSettingsStore'
 import { Header } from '../components/Header'
@@ -25,6 +26,14 @@ const CONTAINER_MAX_WIDTH = '630px'
 const CONTAINER_PADDING = '1rem'
 const BUTTON_HEIGHT = '72px'
 const HEADER_HEIGHT_WITH_FILES = '136px' // Approximate header height when files are loaded
+
+// Button animation configuration - smooth width sliding
+const layoutTransition = {
+  type: 'spring',
+  stiffness: 400,
+  damping: 35,
+  mass: 0.8,
+}
 
 /**
  * Detect format from MIME type (for handling fallback conversions)
@@ -385,10 +394,10 @@ export function App() {
                 maxWidth: CONTAINER_MAX_WIDTH,
                 paddingLeft: CONTAINER_PADDING,
                 paddingRight: CONTAINER_PADDING,
-                height: BUTTON_HEIGHT,
+                minHeight: BUTTON_HEIGHT,
               }}
             >
-              {/* Drawer Container - Behind button, grows upward with animation */}
+              {/* Drawer Container - Behind buttons, grows upward with animation */}
               <div
                 className={`
                   absolute left-0 right-0 bottom-0 z-10
@@ -400,22 +409,45 @@ export function App() {
                   marginRight: CONTAINER_PADDING,
                 }}
               >
-                <div className="bg-brand-bg-secondary border border-brand-border rounded-brand p-4 shadow-2xl mb-4">
+                <div className="bg-brand-bg-secondary border border-brand-border rounded-[36px] p-4 shadow-2xl mb-4">
                   <TargetFormatSelector disabled={isConverting} />
 
                   {/* Cancel button */}
                   <button
                     onClick={() => setIsDrawerOpen(false)}
-                    className="w-full mt-4 p-3 rounded-brand border border-brand-border bg-gray-100 dark:bg-black/20 hover:bg-gray-200 dark:hover:bg-black/30 text-brand-text font-medium transition-all"
+                    className="w-full mt-4 p-3 rounded-full border border-brand-border bg-gray-100 dark:bg-black/20 hover:bg-gray-200 dark:hover:bg-black/30 text-brand-text font-medium transition-all"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
 
-              {/* Convert Button - Above drawer (higher z-index) */}
-              {!allFilesConverted && (
-                <button
+              {/* Dynamic Button Container with smooth width sliding */}
+              <div
+                className="absolute left-0 right-0 bottom-0 flex z-20 overflow-hidden"
+                style={{
+                  pointerEvents: 'auto',
+                  marginLeft: CONTAINER_PADDING,
+                  marginRight: CONTAINER_PADDING,
+                  height: BUTTON_HEIGHT,
+                  gap: 0,
+                }}
+              >
+                {/* Main Convert Button - Always present, width animates based on state */}
+                <motion.button
+                  layout
+                  animate={{
+                    width: allFilesConverted ? 0 : '100%',
+                    opacity: allFilesConverted ? 0 : 1,
+                    paddingLeft: allFilesConverted ? 0 : '1rem',
+                    paddingRight: allFilesConverted ? 0 : '1rem',
+                    paddingTop: allFilesConverted ? 0 : '1rem',
+                    paddingBottom: allFilesConverted ? 0 : '1rem',
+                    borderWidth: allFilesConverted ? 0 : 0,
+                    marginLeft: 0,
+                    marginRight: 0,
+                  }}
+                  transition={layoutTransition}
                   onClick={() => {
                     if (isConverting) {
                       cancelConversion()
@@ -432,33 +464,39 @@ export function App() {
                   }}
                   disabled={availableTargets.length === 0 && !isConverting}
                   className={`
-                    absolute left-0 right-0 bottom-0 p-4 rounded-brand font-semibold text-lg border border-transparent
-                    transition-all duration-300 ease-in-out overflow-hidden
-                    focus:outline-none z-20
+                    rounded-full font-semibold text-lg
+                    overflow-hidden relative
+                    focus:outline-none
+                    transition-colors duration-300 ease-in-out
                     ${
                       availableTargets.length === 0 && !isConverting
-                        ? 'bg-gray-300/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-not-allowed pointer-events-auto'
+                        ? 'bg-gray-400 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
                         : isConverting
-                          ? 'bg-gray-300/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-red-500/20 dark:hover:bg-red-600/20 cursor-pointer pointer-events-auto'
-                          : 'bg-brand-accent hover:bg-brand-accent-hover text-white pointer-events-auto'
+                          ? 'bg-gray-400 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-500 dark:hover:bg-red-600 cursor-pointer'
+                          : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                     }
                   `}
                   style={{
                     height: BUTTON_HEIGHT,
-                    marginLeft: CONTAINER_PADDING,
-                    marginRight: CONTAINER_PADDING,
+                    minWidth: 0,
+                    flexShrink: 0,
+                    pointerEvents: allFilesConverted ? 'none' : 'auto',
+                    borderStyle: 'solid',
+                    borderColor: 'transparent',
                   }}
                 >
                   {showProgressBackground && (
-                    <div
-                      className="absolute inset-0 bg-gray-700/30 dark:bg-gray-600/30 transition-all duration-300"
-                      style={{ width: `${overallProgress}%` }}
+                    <motion.div
+                      className="absolute inset-0 bg-gray-600 dark:bg-gray-700"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${overallProgress}%` }}
+                      transition={{ duration: 0.3 }}
                     />
                   )}
                   {isConverting ? (
-                    <span className="flex items-center justify-center gap-3 relative z-10">
+                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
                       <svg
-                        className="animate-spin h-6 w-6"
+                        className="animate-spin h-6 w-6 shrink-0"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -480,11 +518,9 @@ export function App() {
                       Converting... {Math.round(overallProgress)}%
                     </span>
                   ) : selectedTargetFormat ? (
-                    <span
-                      className={`flex items-center justify-center relative z-10 ${allFilesConverted ? '' : 'gap-3'}`}
-                    >
+                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
                       <svg
-                        className="w-6 h-6"
+                        className="w-6 h-6 shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -496,12 +532,12 @@ export function App() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      {!allFilesConverted && 'Convert'}
+                      Convert
                     </span>
                   ) : (
-                    <span className="flex items-center justify-center gap-3 relative z-10">
+                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
                       <svg
-                        className="w-6 h-6"
+                        className="w-6 h-6 shrink-0"
                         fill="currentColor"
                         viewBox="0 -960 960 960"
                         xmlns="http://www.w3.org/2000/svg"
@@ -511,128 +547,166 @@ export function App() {
                       Pick filetype
                     </span>
                   )}
-                </button>
-              )}
+                </motion.button>
 
-              {/* Convert Again and Download Buttons */}
-              {allFilesConverted && (
-                <div
-                  className="absolute left-0 right-0 bottom-0 flex gap-3 z-20"
+                {/* Convert Again Button - Slides in from left when files completed */}
+                <motion.button
+                  layout
+                  animate={{
+                    width: allFilesConverted ? BUTTON_HEIGHT : 0,
+                    opacity: allFilesConverted ? 1 : 0,
+                    paddingLeft: allFilesConverted ? 0 : 0,
+                    paddingRight: allFilesConverted ? 0 : 0,
+                    paddingTop: allFilesConverted ? 0 : 0,
+                    paddingBottom: allFilesConverted ? 0 : 0,
+                    borderWidth: allFilesConverted ? 1 : 0,
+                    marginLeft: 0,
+                    marginRight: 0,
+                  }}
+                  transition={layoutTransition}
+                  onClick={() => {
+                    if (isConverting) {
+                      cancelConversion()
+                      addToast({
+                        type: 'info',
+                        message: 'Conversion cancelled',
+                      })
+                    } else {
+                      handleConvert()
+                    }
+                  }}
+                  disabled={!canConvert && !isConverting}
+                  className="flex items-center justify-center bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-full font-semibold text-lg transition-colors duration-300 ease-in-out relative overflow-hidden focus:outline-none"
                   style={{
-                    pointerEvents: 'auto',
-                    marginLeft: CONTAINER_PADDING,
-                    marginRight: CONTAINER_PADDING,
+                    height: BUTTON_HEIGHT,
+                    minWidth: 0,
+                    flexShrink: 0,
+                    pointerEvents: allFilesConverted ? 'auto' : 'none',
+                    borderStyle: 'solid',
+                    borderColor: 'transparent',
                   }}
                 >
-                  <button
-                    onClick={() => {
-                      if (isConverting) {
-                        cancelConversion()
-                        addToast({
-                          type: 'info',
-                          message: 'Conversion cancelled',
-                        })
-                      } else {
-                        handleConvert()
-                      }
-                    }}
-                    disabled={!canConvert && !isConverting}
-                    className="bg-slate-600/50 hover:bg-slate-700/50 dark:bg-slate-700/50 dark:hover:bg-slate-600/50 text-white rounded-brand font-semibold text-lg border border-transparent transition-all duration-300 ease-in-out relative overflow-hidden focus:outline-none"
-                    style={{ width: BUTTON_HEIGHT, height: BUTTON_HEIGHT, padding: 0 }}
+                  <svg
+                    className="w-6 h-6 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                  </button>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </motion.button>
 
-                  <button
-                    onClick={async () => {
-                      const completedFiles = files.filter(f => f.status === 'completed' && f.result)
-                      if (completedFiles.length === 0) return
+                {/* Download Button - Slides in from right when files completed */}
+                <motion.button
+                  layout
+                  animate={{
+                    width: allFilesConverted ? 'auto' : 0,
+                    flexGrow: allFilesConverted ? 1 : 0,
+                    opacity: allFilesConverted ? 1 : 0,
+                    paddingLeft: allFilesConverted ? '1rem' : 0,
+                    paddingRight: allFilesConverted ? '1rem' : 0,
+                    paddingTop: allFilesConverted ? '1rem' : 0,
+                    paddingBottom: allFilesConverted ? '1rem' : 0,
+                    borderWidth: allFilesConverted ? 1 : 0,
+                    marginLeft: allFilesConverted ? '0.75rem' : 0,
+                    marginRight: 0,
+                  }}
+                  transition={layoutTransition}
+                  onClick={async () => {
+                    const completedFiles = files.filter(f => f.status === 'completed' && f.result)
+                    if (completedFiles.length === 0) return
 
-                      const allResults = completedFiles.flatMap(f => f.result ?? [])
+                    const allResults = completedFiles.flatMap(f => f.result ?? [])
 
-                      try {
-                        setIsDownloading(true)
-                        setDownloadProgress(0)
+                    try {
+                      setIsDownloading(true)
+                      setDownloadProgress(0)
 
-                        await downloadFiles(allResults, 'auto', progress => {
-                          setDownloadProgress(progress)
-                        })
-                      } catch (error) {
-                        addToast({
-                          type: 'error',
-                          message: 'Download failed',
-                        })
-                      } finally {
-                        setIsDownloading(false)
-                        setDownloadProgress(0)
-                      }
-                    }}
-                    disabled={isDownloading}
-                    className="flex-1 p-4 rounded-brand font-semibold text-lg bg-brand-bg-secondary hover:bg-brand-bg-hover text-brand-text border border-brand-border transition-all duration-300 ease-in-out relative overflow-hidden focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ height: BUTTON_HEIGHT }}
-                  >
-                    {isDownloading && (
-                      <div
-                        className="absolute inset-0 bg-blue-400/20 dark:bg-blue-500/20 transition-all duration-200"
-                        style={{ width: `${downloadProgress}%` }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center justify-center gap-3">
-                      {isDownloading ? (
-                        <>
-                          <svg
-                            className="animate-spin h-6 w-6"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Preparing...
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-6 h-6"
-                            fill="none"
+                      await downloadFiles(allResults, 'auto', progress => {
+                        setDownloadProgress(progress)
+                      })
+                    } catch (error) {
+                      addToast({
+                        type: 'error',
+                        message: 'Download failed',
+                      })
+                    } finally {
+                      setIsDownloading(false)
+                      setDownloadProgress(0)
+                    }
+                  }}
+                  disabled={isDownloading}
+                  className="rounded-full font-semibold text-lg bg-brand-bg-secondary hover:bg-brand-bg-hover text-brand-text transition-colors duration-300 ease-in-out relative overflow-hidden focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    height: BUTTON_HEIGHT,
+                    minWidth: 0,
+                    flexShrink: 0,
+                    pointerEvents: allFilesConverted ? 'auto' : 'none',
+                    borderColor: 'var(--color-border)',
+                    borderStyle: 'solid',
+                  }}
+                >
+                  {isDownloading && (
+                    <motion.div
+                      className="absolute inset-0 bg-blue-500 dark:bg-blue-600"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${downloadProgress}%` }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center justify-center gap-3 whitespace-nowrap">
+                    {isDownloading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-6 w-6 shrink-0"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
                             stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                          </svg>
-                          {files.filter(f => f.status === 'completed' && f.result).length === 1
-                            ? 'Download'
-                            : 'Download All'}
-                        </>
-                      )}
-                    </span>
-                  </button>
-                </div>
-              )}
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-6 h-6 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                        {files.filter(f => f.status === 'completed' && f.result).length === 1
+                          ? 'Download'
+                          : 'Download All'}
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+              </div>
             </div>
           </div>
         </>
