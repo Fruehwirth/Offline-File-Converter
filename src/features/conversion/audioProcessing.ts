@@ -43,6 +43,7 @@ interface QueuedTask {
   reject: (error: any) => void
 }
 let ffmpegQueue: QueuedTask[] = []
+let processQueueScheduled = false // Flag to prevent multiple scheduled process calls
 
 /**
  * Initialize FFmpeg pool with multiple instances
@@ -81,22 +82,35 @@ async function initializeFFmpegPool(): Promise<void> {
 
 /**
  * Process FFmpeg queue (allows multiple concurrent conversions up to pool size)
+ * Processes multiple tasks from the queue until all instances are busy or queue is empty
  */
 function processFFmpegQueue(): void {
+  // Process as many tasks as we have available instances for
   while (ffmpegQueue.length > 0) {
-    // Find available instance
+    // Find an available instance
     const available = ffmpegPool.find(item => !item.busy)
     if (!available) {
       // All instances busy, wait for one to free up
+      const busyCount = ffmpegPool.filter(item => item.busy).length
+      console.log(
+        `[FFmpeg Pool] All instances busy (${busyCount}/${FFMPEG_POOL_SIZE}), ${ffmpegQueue.length} tasks waiting`
+      )
       return
     }
 
     // Get next task from queue
     const queuedTask = ffmpegQueue.shift()
-    if (!queuedTask) return
+    if (!queuedTask) {
+      // Queue was empty (race condition)
+      return
+    }
 
-    // Mark instance as busy
+    // Mark instance as busy BEFORE starting the task to prevent race conditions
     available.busy = true
+    const busyCount = ffmpegPool.filter(item => item.busy).length
+    console.log(
+      `[FFmpeg Pool] Starting task (${busyCount}/${FFMPEG_POOL_SIZE} busy), ${ffmpegQueue.length} tasks remaining in queue`
+    )
 
     // Run task with this instance
     queuedTask
@@ -110,9 +124,36 @@ function processFFmpegQueue(): void {
       .finally(() => {
         // Release instance and process next task
         available.busy = false
+        const busyCountAfter = ffmpegPool.filter(item => item.busy).length
+        console.log(
+          `[FFmpeg Pool] Task completed (${busyCountAfter}/${FFMPEG_POOL_SIZE} busy), ${ffmpegQueue.length} tasks in queue`
+        )
+
+        // Process next task from queue if any are waiting
         processFFmpegQueue()
       })
+
+    // Continue loop to start next task if available
   }
+}
+
+/**
+ * Schedule queue processing on the next microtask
+ * This allows multiple tasks to be queued before processing starts
+ */
+function scheduleQueueProcessing(): void {
+  if (processQueueScheduled) {
+    return
+  }
+
+  processQueueScheduled = true
+
+  // Use queueMicrotask to defer processing to next microtask
+  // This allows all synchronous queueFFmpegTask calls to complete first
+  queueMicrotask(() => {
+    processQueueScheduled = false
+    processFFmpegQueue()
+  })
 }
 
 /**
@@ -120,15 +161,22 @@ function processFFmpegQueue(): void {
  */
 function queueFFmpegTask<T>(task: (ffmpeg: any) => Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
+    const queueLengthBefore = ffmpegQueue.length
+
     ffmpegQueue.push({
       task,
       resolve,
       reject,
     })
 
-    // Try to process immediately if pool is ready and has available instances
+    const busyCount = ffmpegPool.filter(item => item.busy).length
+    console.log(
+      `[FFmpeg Pool] Task queued (queue: ${queueLengthBefore} -> ${ffmpegQueue.length}, busy: ${busyCount}/${FFMPEG_POOL_SIZE})`
+    )
+
+    // Schedule processing (will be deferred to allow batching)
     if (poolInitialized) {
-      processFFmpegQueue()
+      scheduleQueueProcessing()
     } else {
       // Initialize pool if not already done
       initializeFFmpegPool()

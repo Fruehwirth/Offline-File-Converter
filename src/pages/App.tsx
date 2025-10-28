@@ -315,9 +315,10 @@ export function App() {
                 onClick={handleConvert}
                 disabled={!canConvert}
                 className={`
-                  px-8 py-4 rounded-brand font-semibold text-lg
+                  rounded-brand font-semibold text-lg
                   transition-all duration-500 ease-in-out relative overflow-hidden
                   focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+                  ${allFilesConverted ? 'px-0 py-0' : 'px-8 py-4'}
                   ${
                     !canConvert
                       ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
@@ -327,7 +328,7 @@ export function App() {
                   }
                 `}
                 style={{
-                  width: allFilesConverted ? 'calc(50% - 6px)' : '100%',
+                  width: allFilesConverted ? '72px' : '100%',
                   height: '72px',
                 }}
               >
@@ -365,7 +366,9 @@ export function App() {
                     Converting...
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center gap-3 relative z-10">
+                  <span
+                    className={`flex items-center justify-center relative z-10 ${allFilesConverted ? '' : 'gap-3'}`}
+                  >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -374,7 +377,7 @@ export function App() {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    {allFilesConverted ? 'Convert again' : 'Convert'}
+                    {!allFilesConverted && 'Convert'}
                   </span>
                 )}
               </button>
@@ -414,7 +417,7 @@ export function App() {
                   disabled:opacity-50 disabled:cursor-not-allowed
                 "
                 style={{
-                  width: allFilesConverted ? 'calc(50% - 6px)' : '0',
+                  width: allFilesConverted ? 'calc(100% - 84px)' : '0',
                   opacity: allFilesConverted ? 1 : 0,
                   padding: allFilesConverted ? '1rem 2rem' : '1rem 0',
                   height: '72px',
