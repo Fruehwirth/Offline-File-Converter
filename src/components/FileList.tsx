@@ -1,17 +1,19 @@
 /**
  * File list component
  * Displays loaded files with status and actions
- * Includes compact DropZone as last item
  */
 
 import { useConversionStore } from '../features/state/useConversionStore'
 import { formatBytes } from '../utils/bytes'
 import { downloadBlob } from '../features/conversion/download'
-import { DropZone } from './DropZone'
 import { useEffect, useState, useRef } from 'react'
 import { AnimatedFilename } from './AnimatedFilename'
 import { FileTypeIcon } from './FileTypeIcon'
 import { AudioPreviewIcon } from './AudioPreviewIcon'
+
+interface FileListProps {
+  onAddFiles?: () => void
+}
 
 /**
  * Custom hook for smooth progress animation
@@ -193,93 +195,60 @@ function FileThumbnail({ file }: { file: File }) {
   return null
 }
 
-export function FileList() {
+export function FileList({ onAddFiles }: FileListProps) {
   const files = useConversionStore(state => state.files)
-  const clearFiles = useConversionStore(state => state.clearFiles)
   const isConverting = useConversionStore(state => state.isConverting)
 
   if (files.length === 0) {
     return null
   }
 
-  // Count files by status for concurrent processing indicator
-  const processingCount = files.filter(f => f.status === 'processing').length
-
-  // Check if any files are completed or being processed
-  const hasCompletedFiles = files.some(f => f.status === 'completed' && f.result)
-  const hasProcessingFiles = files.some(f => f.status === 'processing')
-
-  // Calculate dynamic height based on state
-  // When converting or any files are completed/processing, we don't show "Add more files" button at bottom
-  // So the list can expand more
-  const listMaxHeight = isConverting || hasCompletedFiles || hasProcessingFiles ? '260px' : '560px'
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-brand-text">Files ({files.length})</h3>
-          {isConverting && processingCount > 0 && (
-            <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
+    <div className="space-y-2">
+      {/* File list items */}
+      {files.map(file => {
+        const hasError = file.status === 'error' && !!file.error
+        return <FileListItem key={file.id} file={file} hasError={hasError} />
+      })}
+
+      {/* Add More Files Button - at the end of the list */}
+      {onAddFiles && (
+        <button
+          onClick={onAddFiles}
+          disabled={isConverting}
+          className={`
+            w-full p-4 rounded-brand border border-dashed
+            transition-all bg-gray-100 dark:bg-black/20
+            ${
+              isConverting
+                ? 'cursor-not-allowed border-transparent opacity-40'
+                : 'border-brand-border hover:border-brand-accent/50 hover:bg-gray-200 dark:hover:bg-black/30 cursor-pointer'
+            }
+          `}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-brand-accent/10 flex items-center justify-center flex-shrink-0">
               <svg
-                className="animate-spin h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5 text-brand-accent"
                 fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
                 <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
                 />
               </svg>
-              {processingCount} converting
-            </span>
-          )}
-        </div>
-        {!isConverting && (
-          <button
-            onClick={clearFiles}
-            className="
-              text-sm text-brand-text-secondary hover:text-brand-error
-              transition-colors flex items-center gap-1.5
-            "
-          >
-            Clear all
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Scrollable file list */}
-      <div
-        className="overflow-y-auto space-y-2 pr-1 transition-all duration-500 ease-in-out"
-        style={{ maxHeight: `calc(100vh - ${listMaxHeight})` }}
-      >
-        {files.map(file => {
-          const hasError = file.status === 'error' && !!file.error
-
-          return <FileListItem key={file.id} file={file} hasError={hasError} />
-        })}
-      </div>
-
-      {/* Compact DropZone for adding more files - Only show before conversion starts */}
-      {!isConverting && !hasCompletedFiles && !hasProcessingFiles && <DropZone disabled={false} />}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-brand-text text-left">Add more files</p>
+            </div>
+          </div>
+        </button>
+      )}
 
       <style>{`
         @keyframes fadeIn {

@@ -1,0 +1,67 @@
+---
+alwaysApply: true
+description: In this file we store short pieces of information that are important for usual tasks
+---
+
+# Knowledgebase
+
+This file holds pieces of information that an AI agent needs to know before doing a task. Something that they could encouter more often. This Knowledgebase is intended to be updated constantly. Keep information very short and consise and to the point. But update as soon as you deem something noteworthy for future use.
+
+# User
+
+The user uses a Windows machine
+
+## Design Preferences
+
+User expects modern, polished UI with:
+
+- **Buttery smooth animations**: Clean, satisfying transitions
+- **Modern aesthetic**: Flat design with glassy/frosted effects
+- **Transparency**: Subtle backdrop blur and translucency
+- **Performance**: Animations must be smooth (60fps), not janky
+- Use CSS transitions with `ease-in-out` or `cubic-bezier` for natural feel
+
+# Program Structure
+
+We want to keep everything abstracted in a way that makes future addions of features as seemless as possible.
+
+# Build Environment
+
+This website is deployed on GitHub Pages and should me mantained as such, make sure the website runs and builds under the local environment and GitHub Pages
+
+# UI Patterns
+
+## Animation Standards
+
+All UI animations should be:
+
+- **Smooth & satisfying**: 60fps performance target
+- **Modern feel**: Use glassy/frosted effects, subtle transparency
+- **Proper timing**: `transition-all duration-300 ease-in-out` or similar
+- **Performant properties**: Prefer `transform` and `opacity` over layout properties
+- Apply `backdrop-blur` for glassy effects
+
+## Slide-Out Drawers
+
+For drawers that need user interaction to open (not just hover):
+
+- Button must be **enabled** when drawer needs to be opened
+- Only disable when truly no action possible (e.g., no data available)
+- Use onClick toggle, not hover, for better touch device support
+- Auto-close drawer on selection via useEffect for seamless UX
+- Animation: max-height transition (not height), with overflow-hidden, smooth duration
+
+**Spacing Pattern for Collapsible Elements:**
+
+- ❌ Don't use `space-y-*` on parent when child can collapse to 0 height
+- ✅ Use conditional margin on the collapsible element itself
+- Example: `className={isOpen ? 'mb-4' : ''}` prevents background bleed-through
+
+## Button Disabled Logic
+
+When button serves dual purpose (open drawer / execute action):
+
+- Analyze: "What needs to happen when user clicks?"
+- If drawer needs to open → button must be enabled
+- Common mistake: Disabling too early based on final action requirements
+- Example: `disabled={availableTargets.length === 0}` not `disabled={!selectedFormat}`

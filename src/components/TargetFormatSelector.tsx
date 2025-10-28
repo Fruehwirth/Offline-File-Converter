@@ -117,8 +117,8 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
                 focus:outline-none
                 ${
                   selectedTargetFormat === format
-                    ? 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-brand-text'
-                    : 'bg-white dark:bg-gray-900 border-brand-border text-brand-text hover:border-brand-accent/50'
+                    ? 'bg-brand-accent hover:bg-brand-accent-hover border-brand-accent text-white'
+                    : 'bg-gray-100 dark:bg-black/20 border-brand-border text-brand-text hover:border-brand-accent/50'
                 }
               `}
               aria-pressed={selectedTargetFormat === format}

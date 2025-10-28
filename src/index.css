@@ -24,7 +24,7 @@
     white-space: nowrap;
     border-width: 0;
   }
-  
+
   /* Animation for toast slide-in */
   @keyframes slide-in {
     from {
@@ -36,7 +36,7 @@
       opacity: 1;
     }
   }
-  
+
   .animate-slide-in {
     animation: slide-in 0.3s ease-out;
   }
@@ -66,5 +66,14 @@
   *::-webkit-scrollbar-thumb:hover {
     background: var(--color-accent);
   }
-}
 
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}

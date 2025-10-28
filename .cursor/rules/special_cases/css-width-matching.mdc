@@ -1,0 +1,76 @@
+---
+description: 'Apply when user asks to match widths of multiple elements, fix CSS width issues, align elements, or troubleshoot flex/grid layout width problems'
+---
+
+# CSS Width Matching
+
+For making elements have exact same width:
+
+## Critical First Step
+
+Check DOM structure BEFORE adjusting CSS. Verify elements are at same hierarchy level with same parent.
+
+## Common Mistakes
+
+- ❌ Matching widths when one element is in flex/grid container and others aren't
+- ❌ Assuming `width: 100%` or `w-full` means same thing in all contexts
+- ✅ Use conditional rendering to change structure based on state
+
+## Flex Container Issues
+
+- `w-full` inside flex ≠ 100% of page/parent
+- Flex gaps (`gap-3`, etc.) affect child width calculations
+- **Solution**: Extract element from flex if it needs to match siblings outside flex
+
+## Checklist
+
+All elements need:
+
+1. Same parent container + max-width constraints
+2. Same padding (`p-4` not `px-8 py-4`)
+3. Same border width (`border` vs `border-2`)
+4. Same box-sizing
+5. **No flex parent unless all share same flex parent**
+
+## Pattern
+
+```tsx
+// ✅ Same level
+<Container>
+  <A className="w-full p-4 border" />
+  <B className="w-full p-4 border" />
+  <C className="w-full p-4 border" />
+</Container>
+
+// ❌ C in flex
+<Container>
+  <A className="w-full p-4 border" />
+  <B className="w-full p-4 border" />
+  <div className="flex gap-3">
+    <C className="w-full p-4 border" /> {/* Won't match! */}
+  </div>
+</Container>
+
+// ✅ Conditional rendering
+<Container>
+  <A className="w-full p-4 border" />
+  <B className="w-full p-4 border" />
+  {!multi && <C className="w-full p-4 border" />}
+  {multi && (
+    <div className="flex gap-3">
+      <C className="w-16 p-4 border" />
+      <D className="flex-1 p-4 border" />
+    </div>
+  )}
+</Container>
+```
+
+## Still Not Matching?
+
+1. Check DevTools computed styles
+2. Look for: border width, padding, margins, transforms, parent differences
+3. **Stop trying CSS adjustments** - it's structural
+
+## Key Principle
+
+**Don't adjust CSS if DOM structure is the problem.** Use conditional rendering to match structure to state.

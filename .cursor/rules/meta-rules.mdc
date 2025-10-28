@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# Meta Rules & Self-Reflection
+
+## Maintaining These Rules
+
+When updating rules:
+
+- **Be concise**: Avoid redundancies
+- **Simplify**: Make clearer and more direct
+- **Add useful patterns**: Welcome new insights
+- **Keep actionable**: Clear, practical application
+- **REALLY sum it up**: Make significantly shorter when rewriting
+
+## Self-Reflection Protocol
+
+After solving a problem (especially after failures):
+
+1. **PAUSE**: "What did I do differently that worked?"
+2. **Identify key change**: Structural vs CSS? Different approach/tool?
+3. **Share insight**: Help user understand the solution
+4. **Update mental model**: Remember pattern for future
+
+## General Problem-Solving
+
+When attempts fail multiple times:
+
+1. **Stop and reassess**: Don't try variations of same approach
+2. **Question the approach**: CSS problem or structural problem?
+3. **Look broader**: What's different about the failing element?
+4. **Consider restructuring**: Sometimes HTML/JSX change beats fighting CSS
+5. **Test incrementally**: One change at a time
+
+## Creating New Rule Files
+
+When creating new knowledge/findings files in `.cursor/rules/`:
+
+- **Include description**: Add YAML frontmatter with concise description of contents and potential use cases
+- **Example format**:
+  ```yaml
+  ---
+  description: 'Brief what/why/when to use this rule'
+  alwaysApply: false
+  ---
+  ```

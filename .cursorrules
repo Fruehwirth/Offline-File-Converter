@@ -1,0 +1,114 @@
+## Maintaining These Rules
+
+When updating this file (especially the Self-Reflection Protocol):
+
+- **Be concise**: Avoid redundancies and verbose explanations
+- **Simplifications welcome**: Make rules clearer and more direct
+- **Additions welcome**: Add new patterns or insights that prove useful
+- **Keep it actionable**: Every rule should have clear, practical application
+- **REALLY sum it up**: If rewriting rules, make them significantly shorter. The current rules are already too verbose.
+
+## AI Self-Reflection Protocol
+
+After successfully solving a problem (especially after multiple failed attempts):
+
+1. **PAUSE and ask yourself**: "What did I do differently this time that made it work?"
+2. **Identify the key change**: Was it a structural change vs. just CSS properties? A different approach? A different tool?
+3. **Share this insight** with the user if they might benefit from understanding the solution approach
+4. **Update your mental model**: Remember this pattern for similar future issues
+
+## CSS Width Matching Rules
+
+When asked to make multiple elements have the exact same width:
+
+### Critical First Step: Check DOM Structure
+
+Before adjusting any CSS properties, verify that elements are at the same hierarchy level with the same parent container.
+
+**Common Mistake**: Trying to match widths when elements are in different container contexts
+
+- ❌ Don't try to match widths if one element is inside a flex/grid container and others aren't
+- ❌ Don't assume `width: 100%` or `w-full` means the same thing in all contexts
+- ✅ Use conditional rendering to change structure based on state if needed
+
+### Flex Container Width Issues
+
+- `width: 100%` or `w-full` inside a flex container does NOT mean 100% of the page/parent
+- Flex gaps (`gap-3`, `gap-4`, etc.) affect child width calculations
+- **If an element needs to match width with siblings outside flex, extract it from the flex container**
+
+### Matching Width Checklist
+
+All elements must have:
+
+1. ✅ Same parent container with same max-width constraints
+2. ✅ Same padding values (use `p-4` not `px-8 py-4` for consistency)
+3. ✅ Same border width (1px border vs 2px border affects total width)
+4. ✅ Same box-sizing behavior
+5. ✅ **No flex parent unless all elements share the same flex parent**
+
+### Solution Pattern
+
+```tsx
+// ✅ GOOD - All elements at same hierarchy level
+<div className="container mx-auto max-w-[630px]" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+  <ElementA className="w-full p-4 border" />
+  <ElementB className="w-full p-4 border" />
+  <ElementC className="w-full p-4 border border-transparent" />
+</div>
+
+// ❌ BAD - Element C is nested in flex container
+<div className="container mx-auto max-w-[630px]" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+  <ElementA className="w-full p-4 border" />
+  <ElementB className="w-full p-4 border" />
+  <div className="flex gap-3">
+    <ElementC className="w-full p-4 border" /> {/* This will NOT match A and B width! */}
+  </div>
+</div>
+
+// ✅ GOOD - Conditional rendering to match structure to state
+<div className="container mx-auto max-w-[630px]" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+  <ElementA className="w-full p-4 border" />
+  <ElementB className="w-full p-4 border" />
+
+  {/* Single element state */}
+  {!showMultiple && (
+    <ElementC className="w-full p-4 border" />
+  )}
+
+  {/* Multiple elements state */}
+  {showMultiple && (
+    <div className="flex gap-3">
+      <ElementC className="w-16 p-4 border" />
+      <ElementD className="flex-1 p-4 border" />
+    </div>
+  )}
+</div>
+```
+
+### When Width Still Doesn't Match
+
+If elements still have different widths after ensuring same structure:
+
+1. Inspect actual computed styles in browser DevTools
+2. Check for:
+   - Different border widths (`border` vs `border-2`)
+   - Different padding (`p-4` vs `px-8 py-4`)
+   - Hidden margins or transforms
+   - Parent container differences
+3. **Don't keep trying the same CSS adjustments** - the issue is structural, not a missing pixel value
+
+### Key Principle
+
+**Don't just adjust CSS properties if the DOM structure itself is causing the width mismatch.**
+Use conditional rendering to change the layout structure based on application state rather than trying to force one structure to work for all states.
+
+## General Problem-Solving Approach
+
+When a solution attempt fails multiple times:
+
+1. **Stop and reassess**: Don't keep trying variations of the same approach
+2. **Question the approach**: Is this a CSS problem or a structural problem?
+3. **Look at the broader context**: What's different about the element that's not matching?
+4. **Consider restructuring**: Sometimes changing the HTML/JSX structure is easier than fighting CSS
+5. **Test incrementally**: Make one change at a time and verify the result

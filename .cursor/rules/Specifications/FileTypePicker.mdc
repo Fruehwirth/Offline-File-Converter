@@ -1,0 +1,192 @@
+---
+description: Detailed specification for the slide-out drawer UI that allows users to select target file formats for conversion. Use this when implementing or modifying the format picker functionality.
+alwaysApply: false
+alias: 'Shelf, Pick File Type '
+---
+
+# FileType Picker - Slide-Out Drawer Specification
+
+## Overview
+
+The FileType Picker is implemented as a **slide-out drawer** that appears above the main action button. It uses a click-to-toggle pattern rather than hover, providing better UX especially on touch devices.
+
+**Design Standard**: All animations must be buttery smooth, satisfying, and modern - using glassy/frosted effects with subtle transparency for a polished feel.
+
+## Architecture
+
+### Component Structure
+
+```
+App.tsx (Main Container)
+├── FileList (Scrollable)
+│   ├── File Items
+│   └── "Add More Files" Button (at end of list)
+├── Hidden <input type="file">
+└── Fixed Bottom Section
+    ├── Drawer (Format Selector + Cancel)
+    └── Pick Filetype / Convert Button
+```
+
+### State Management
+
+- `isDrawerOpen` (boolean): Controls drawer visibility
+- `selectedTargetFormat` (FormatId | null): Currently selected format
+- `availableTargets` (FormatId[]): Compatible formats for loaded files
+
+## UI Behavior
+
+### Initial State (No Format Selected)
+
+- Button displays: **"Pick filetype"** icon + text
+- Button is **enabled** if `availableTargets.length > 0`
+- Button is **disabled** only if `availableTargets.length === 0`
+- Drawer is hidden (max-height: 0, opacity: 0)
+
+### Opening the Drawer
+
+- User clicks "Pick filetype" button
+- `isDrawerOpen` toggles to `true`
+- Drawer slides down with 300ms transition
+- Drawer contains:
+  - `TargetFormatSelector` component (format buttons)
+  - "Cancel" button at bottom
+
+### Selecting a Format
+
+- User clicks a format button (e.g., ".png", ".jpg")
+- `selectedTargetFormat` is set
+- Drawer **automatically closes** via `useEffect` hook
+- Button changes to **"Convert"** with rotate icon
+
+### Canceling
+
+- User clicks "Cancel" button in drawer
+- `isDrawerOpen` set to `false`
+- Drawer slides back up
+- No format is selected
+
+### Converting
+
+- User clicks "Convert" button (when format is selected)
+- Conversion starts
+- Drawer is explicitly closed (`setIsDrawerOpen(false)`)
+
+## Critical Implementation Details
+
+### Button Disabled Logic
+
+**CRITICAL**: The button must be clickable to open the drawer!
+
+```tsx
+disabled={availableTargets.length === 0 && !isConverting}
+```
+
+**Why this works:**
+
+- When `availableTargets.length > 0` → Button is enabled → Can click to open drawer
+- When `selectedTargetFormat` is set → Button is enabled → Can click to convert
+- Only disabled when there are NO compatible formats at all
+
+**WRONG Implementation (causes bug):**
+
+```tsx
+// DON'T DO THIS - button becomes unclickable when no format selected
+disabled={!canConvert && !isConverting && (!availableTargets.length || selectedTargetFormat === null)}
+```
+
+### Drawer Animation (Overlay)
+
+```tsx
+className={`
+  absolute left-0 right-0 bottom-full mb-4 z-50
+  transition-all duration-300 ease-out overflow-hidden origin-bottom
+  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0
+    ? 'max-h-[500px]'
+    : 'max-h-0'}
+`}
+```
+
+- **Absolutely positioned**: `absolute left-0 right-0 bottom-full` positions it as an overlay above the button
+- **No document flow impact**: Drawer doesn't push or move the file list when opening/closing
+- Uses `max-height` transition (not height) for smooth slide animation
+- No opacity transition - purely slides out/in without fading
+- `origin-bottom` ensures animation starts from bottom (slides up from button when opening)
+- `overflow-hidden` prevents content overflow during animation
+- `mb-4` creates spacing between drawer and button (fixed spacing, not conditional)
+- `z-50` ensures drawer appears above file list content
+- `shadow-lg` adds depth to show it's floating above content
+- Parent container must have `relative` positioning
+- Drawer only shows if: drawer is open AND no format selected AND targets available
+
+### Auto-Close on Selection
+
+```tsx
+useEffect(() => {
+  if (selectedTargetFormat) {
+    setIsDrawerOpen(false)
+  }
+}, [selectedTargetFormat])
+```
+
+Automatically closes drawer when user selects a format, providing seamless UX.
+
+## Visual Design
+
+### Drawer Container
+
+- Background: `bg-brand-bg-secondary`
+- Border: `border border-brand-border`
+- Rounded corners: `rounded-brand`
+- Padding: `p-4`
+- Bottom margin: `mb-4` (space between drawer and button)
+
+### Cancel Button (inside drawer)
+
+- Full width: `w-full`
+- Border: `border-brand-border`
+- Background: `bg-gray-100 dark:bg-black/20`
+- Hover: `hover:bg-gray-200 dark:hover:bg-black/30`
+- Top margin: `mt-4` (space from format selector)
+
+### Main Action Button
+
+- Height: `72px` (fixed)
+- Blue accent when enabled: `bg-brand-accent hover:bg-brand-accent-hover`
+- Gray when disabled: `bg-gray-300/50 dark:bg-gray-700/50`
+- Shows "Pick filetype" or "Convert" based on `selectedTargetFormat`
+
+## Integration with FileList
+
+The "Add More Files" button is rendered **inside** `FileList.tsx` at the end of the file list:
+
+```tsx
+<FileList onAddFiles={() => fileInputRef.current?.click()} />
+```
+
+**Rationale**:
+
+- Keeps "Add more files" contextually with the files
+- Maintains consistent width with file items
+- Scrolls with the file list
+- Simpler layout structure
+
+## Common Pitfalls
+
+1. **Button Disabled Too Early**: Don't disable the button when no format is selected - it needs to be clickable to open drawer
+2. **Drawer Doesn't Show**: Check that `availableTargets.length > 0` and targets are being calculated
+3. **Hover Issues**: The disabled cursor-blocked was caused by strict disabled logic, not hover states
+4. **Width Misalignment**: All elements (FileList, Add Files, Drawer, Button) share same container with `max-width: 630px`
+5. **Parent Positioning**: The drawer's parent container must have `position: relative` for absolute positioning to work correctly
+6. **Z-Index Issues**: Drawer needs high z-index (z-50) to appear above scrollable file list content
+
+## Testing Checklist
+
+- [ ] Upload files → Button becomes enabled
+- [ ] Click "Pick filetype" → Drawer slides up as overlay (doesn't push file list)
+- [ ] File list remains stationary when drawer opens/closes
+- [ ] Drawer appears above file list with visible shadow
+- [ ] Click format → Drawer closes automatically
+- [ ] Button shows "Convert" → Click starts conversion
+- [ ] Click "Cancel" in drawer → Drawer closes without selection
+- [ ] Add more files button appears at end of list
+- [ ] All elements have same width (630px max)
