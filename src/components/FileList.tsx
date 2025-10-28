@@ -232,14 +232,14 @@ export function FileList() {
   // Count files by status for concurrent processing indicator
   const processingCount = files.filter(f => f.status === 'processing').length
 
-  // Check if all files are converted
-  const allFilesConverted =
-    files.length > 1 && files.every(f => f.status === 'completed' && f.result)
+  // Check if any files are completed or being processed
+  const hasCompletedFiles = files.some(f => f.status === 'completed' && f.result)
+  const hasProcessingFiles = files.some(f => f.status === 'processing')
 
   // Calculate dynamic height based on state
-  // When converting or all files converted, we don't show "Add more files" button at bottom
+  // When converting or any files are completed/processing, we don't show "Add more files" button at bottom
   // So the list can expand more
-  const listMaxHeight = isConverting || allFilesConverted ? '260px' : '560px'
+  const listMaxHeight = isConverting || hasCompletedFiles || hasProcessingFiles ? '260px' : '560px'
 
   return (
     <div className="space-y-4">
@@ -305,8 +305,8 @@ export function FileList() {
         })}
       </div>
 
-      {/* Compact DropZone for adding more files - Only show before conversion */}
-      {!isConverting && !allFilesConverted && <DropZone disabled={false} />}
+      {/* Compact DropZone for adding more files - Only show before conversion starts */}
+      {!isConverting && !hasCompletedFiles && !hasProcessingFiles && <DropZone disabled={false} />}
 
       <style>{`
         @keyframes fadeIn {

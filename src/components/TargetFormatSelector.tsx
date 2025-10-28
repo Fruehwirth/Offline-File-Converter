@@ -114,7 +114,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
               className={`
                 relative px-6 py-2 rounded-brand border-2 font-medium min-w-[80px]
                 transition-all
-                focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+                focus:outline-none
                 ${
                   selectedTargetFormat === format
                     ? 'bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-brand-text'

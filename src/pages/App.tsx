@@ -286,7 +286,7 @@ export function App() {
                   focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
                   ${
                     !canConvert
-                      ? 'bg-brand-bg-secondary text-brand-text-secondary cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                       : allFilesConverted
                         ? 'bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white'
                         : 'bg-brand-accent hover:bg-brand-accent-hover text-white'

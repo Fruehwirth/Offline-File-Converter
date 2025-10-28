@@ -68,13 +68,13 @@ export function DropZone({ disabled = false }: DropZoneProps) {
       <div
         className={`
           p-4 rounded-brand border-2 border-dashed
-          transition-all relative
+          transition-all relative bg-gray-100 dark:bg-black/20
           ${
             disabled
               ? 'cursor-not-allowed border-brand-border'
               : isDragging
                 ? 'border-brand-accent bg-brand-accent/5 cursor-pointer'
-                : 'border-brand-border hover:border-brand-accent/50 hover:bg-brand-bg-hover cursor-pointer'
+                : 'border-brand-border hover:border-brand-accent/50 hover:bg-gray-200 dark:hover:bg-black/30 cursor-pointer'
           }
         `}
         style={disabled ? { borderColor: 'transparent' } : undefined}
