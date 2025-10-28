@@ -9,7 +9,17 @@ This file holds pieces of information that an AI agent needs to know before doin
 
 # User
 
-The user uses a Windows machine
+The user uses a Windows machine with PowerShell
+
+## Shell Commands
+
+**CRITICAL**: User is on Windows with PowerShell, NOT Bash/Linux!
+
+- ❌ **WRONG**: `command1 && command2` (Bash syntax)
+- ✅ **CORRECT**: `command1 ; command2` (PowerShell syntax)
+- Always use PowerShell syntax for multi-command operations
+- Path separators: Use backslashes `\` or forward slashes `/` (PowerShell accepts both)
+- **Never assume Bash syntax** - always check OS first or use PowerShell-compatible commands
 
 ## Design Preferences
 
