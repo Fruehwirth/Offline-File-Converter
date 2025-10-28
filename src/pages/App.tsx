@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { useConversionStore } from '../features/state/useConversionStore'
+import { useSettingsStore } from '../features/state/useSettingsStore'
 import { Header } from '../components/Header'
 import { EmptyState } from '../components/EmptyState'
 import { FileList } from '../components/FileList'
@@ -41,6 +42,9 @@ function detectFormatFromMime(mimeType: string): FormatId | null {
 export function App() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
+
+  // Get auto-download setting
+  const autoDownload = useSettingsStore(state => state.settings.autoDownload)
 
   // Prevent default drag & drop behavior on the entire page
   useEffect(() => {
@@ -201,6 +205,36 @@ export function App() {
     const allCompleted = currentFiles.every(f => f.status === 'completed')
     if (allCompleted) {
       setAllFilesConverted(true)
+
+      // Auto-download if setting is enabled
+      if (autoDownload) {
+        const completedFiles = currentFiles.filter(f => f.status === 'completed' && f.result)
+        if (completedFiles.length > 0) {
+          const allResults = completedFiles.flatMap(f => f.result ?? [])
+
+          try {
+            setIsDownloading(true)
+            setDownloadProgress(0)
+
+            await downloadFiles(allResults, 'auto', progress => {
+              setDownloadProgress(progress)
+            })
+
+            addToast({
+              type: 'success',
+              message: 'Files downloaded successfully',
+            })
+          } catch (error) {
+            addToast({
+              type: 'error',
+              message: 'Auto-download failed',
+            })
+          } finally {
+            setIsDownloading(false)
+            setDownloadProgress(0)
+          }
+        }
+      }
     }
 
     announceToScreenReader(`Conversion complete. ${successCount} file(s) converted.`)

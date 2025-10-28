@@ -1,9 +1,9 @@
 /**
  * Application header
- * Contains branding and theme toggle
+ * Contains branding and settings
  */
 
-import { ThemeToggle } from './ThemeToggle'
+import { SettingsModal } from './SettingsModal'
 
 export function Header() {
   return (
@@ -40,7 +40,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
+          <SettingsModal />
         </div>
       </div>
     </header>

@@ -100,6 +100,8 @@ export function EmptyState() {
           Drag & drop any files here or click to select.
           <br />
           100% local processing • No uploads • No tracking
+          <br />
+          All processing happens locally in your browser
         </p>
 
         <button
