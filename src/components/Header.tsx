@@ -27,7 +27,7 @@ export function Header() {
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-brand-text">File Converter</h1>
+            <h1 className="text-lg font-semibold text-brand-text">LocalConvert</h1>
             <p className="text-xs text-brand-text-secondary">100% local, privacy-first</p>
           </div>
         </div>

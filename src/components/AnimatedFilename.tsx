@@ -48,16 +48,26 @@ export function AnimatedFilename({
   }, [isConverted, hasAnimated, original.extension, converted.extension])
 
   const displayExtension = isConverted ? converted.extension : original.extension
+  // Reserve space for extension (estimate ~0.6em per character + dot)
+  const extensionSpace = displayExtension ? `${(displayExtension.length + 1) * 0.6}em` : '0'
 
   return (
-    <p className="text-sm font-medium text-brand-text flex items-center min-w-0">
-      <span className="truncate flex-shrink min-w-0">
+    <p className="text-sm font-medium text-brand-text truncate">
+      <span
+        className="inline-block align-bottom truncate"
+        style={{
+          maxWidth: `calc(100% - ${extensionSpace})`,
+          verticalAlign: 'bottom',
+        }}
+      >
         {isConverted ? converted.basename : original.basename}
       </span>
       {displayExtension && (
         <>
-          <span className="flex-shrink-0">.</span>
-          <span className="inline-block relative flex-shrink-0">
+          <span className="inline-block align-bottom" style={{ verticalAlign: 'bottom' }}>
+            .
+          </span>
+          <span className="inline-block relative align-bottom" style={{ verticalAlign: 'bottom' }}>
             {isAnimating ? (
               <>
                 {/* Old extension falling down */}
