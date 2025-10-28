@@ -3,10 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import {
-  getFormat,
-  getFormatsByCategory,
-} from '../features/conversion/formatRegistry'
+import { getFormat, getFormatsByCategory } from '../features/conversion/formatRegistry'
 import { findCommonTargets, getTargetsForFormat } from '../features/conversion/commonDenominators'
 
 describe('Audio Format Registry', () => {

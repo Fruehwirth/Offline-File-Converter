@@ -48,7 +48,7 @@ export default defineConfig({
         manualChunks: {
           jszip: ['jszip'],
           lamejs: ['@breezystack/lamejs'],
-          ffmpeg: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+          ffmpeg: ['@ffmpeg/ffmpeg'],
         },
       },
     },

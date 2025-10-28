@@ -10,7 +10,7 @@ export function generateTestPNG(): Blob {
   const canvas = document.createElement('canvas')
   canvas.width = 64
   canvas.height = 64
-  
+
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Could not get 2D context')
 
@@ -52,11 +52,11 @@ export function base64ToBlob(base64: string, type = 'image/png'): Blob {
   for (let offset = 0; offset < byteCharacters.length; offset += 512) {
     const slice = byteCharacters.slice(offset, offset + 512)
     const byteNumbers = new Array(slice.length)
-    
+
     for (let i = 0; i < slice.length; i++) {
       byteNumbers[i] = slice.charCodeAt(i)
     }
-    
+
     byteArrays.push(new Uint8Array(byteNumbers))
   }
 
@@ -84,4 +84,3 @@ export function createPNGSignature(): Uint8Array {
 export function createICOSignature(): Uint8Array {
   return new Uint8Array([0x00, 0x00, 0x01, 0x00])
 }
-
