@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
-  base: '/Offline-File-Converter/',
+export default defineConfig(({ mode }) => ({
+  // Use '/' for development, '/Offline-File-Converter/' for production (GitHub Pages)
+  base: mode === 'production' ? '/Offline-File-Converter/' : '/',
   plugins: [
     react(),
     {
@@ -58,4 +59,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.ts',
   },
-})
+}))
