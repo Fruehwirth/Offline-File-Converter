@@ -77,6 +77,7 @@ function useSmoothProgress(targetProgress: number, status: string) {
 function FileThumbnail({ file }: { file: File }) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [hasError, setHasError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Create object URL for preview
@@ -116,23 +117,79 @@ function FileThumbnail({ file }: { file: File }) {
 
   if (isImage) {
     return (
-      <img
-        src={thumbnailUrl || ''}
-        alt=""
-        className="w-full h-full object-contain rounded"
-        onError={() => setHasError(true)}
-      />
+      <>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-brand-accent/10 rounded-lg">
+            <svg
+              className="animate-spin h-6 w-6 text-brand-accent"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </div>
+        )}
+        <img
+          src={thumbnailUrl || ''}
+          alt=""
+          className="w-full h-full object-cover rounded-lg"
+          onError={() => setHasError(true)}
+          onLoad={() => setIsLoading(false)}
+          style={{ display: isLoading ? 'none' : 'block' }}
+        />
+      </>
     )
   }
 
   if (isVideo && thumbnailUrl) {
     return (
-      <video
-        src={thumbnailUrl}
-        className="w-full h-full object-contain rounded"
-        muted
-        onError={() => setHasError(true)}
-      />
+      <>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-brand-accent/10 rounded-lg">
+            <svg
+              className="animate-spin h-6 w-6 text-brand-accent"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </div>
+        )}
+        <video
+          src={thumbnailUrl}
+          className="w-full h-full object-cover rounded-lg"
+          muted
+          onError={() => setHasError(true)}
+          onLoadedData={() => setIsLoading(false)}
+          style={{ display: isLoading ? 'none' : 'block' }}
+        />
+      </>
     )
   }
 
@@ -161,9 +218,6 @@ export function FileList() {
 
   // Count files by status for concurrent processing indicator
   const processingCount = files.filter(f => f.status === 'processing').length
-  const completedCount = files.filter(f => f.status === 'completed').length
-  const queuedCount = files.filter(f => f.status === 'queued').length
-  const errorCount = files.filter(f => f.status === 'error').length
 
   return (
     <div className="space-y-4">
@@ -209,33 +263,10 @@ export function FileList() {
         )}
       </div>
 
-      {/* Status summary when converting */}
-      {isConverting && (completedCount > 0 || queuedCount > 0 || errorCount > 0) && (
-        <div className="flex flex-wrap gap-2 text-xs text-brand-text-secondary">
-          {completedCount > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              {completedCount} completed
-            </span>
-          )}
-          {queuedCount > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-              {queuedCount} queued
-            </span>
-          )}
-          {errorCount > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
-              {errorCount} failed
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="space-y-2">
+      {/* Scrollable file list */}
+      <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-1">
         {files.map(file => {
-          const hasError = file.status === 'error' && file.error
+          const hasError = file.status === 'error' && !!file.error
 
           // Extract target format from result filename
           const targetFormat: FormatId | null = file.result?.[0]?.filename
@@ -251,10 +282,10 @@ export function FileList() {
             />
           )
         })}
-
-        {/* Compact DropZone for adding more files - Always visible, disabled during conversion */}
-        <DropZone disabled={isConverting} />
       </div>
+
+      {/* Compact DropZone for adding more files - Always visible, disabled during conversion */}
+      <DropZone disabled={isConverting} />
     </div>
   )
 }
@@ -310,11 +341,11 @@ function FileListItem({
         {/* Thumbnail Preview */}
         <div
           className={`
-          flex-shrink-0 flex items-center justify-center overflow-hidden
+          flex-shrink-0 flex items-center justify-center overflow-hidden rounded-lg relative
           ${
             hasError
-              ? 'w-12 h-12 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/30 rounded'
-              : 'w-12 h-12 sm:w-20 sm:h-20 bg-brand-accent/5 rounded'
+              ? 'w-12 h-12 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/30'
+              : 'w-12 h-12 sm:w-20 sm:h-20 bg-brand-accent/5'
           }
         `}
           style={{ maxWidth: '125px', maxHeight: '125px' }}
@@ -363,11 +394,21 @@ function FileListItem({
               </div>
             </div>
 
-            {/* Status Message - Completed */}
-            {file.status === 'completed' && file.result && (
-              <p className="text-xs text-brand-success font-medium">
-                ✓ Converted {file.result.length} file(s)
+            {/* Status Message - All States */}
+            {file.status === 'queued' && isConverting && (
+              <p className="text-xs text-brand-text-secondary font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                Queued...
               </p>
+            )}
+            {file.status === 'processing' && (
+              <p className="text-xs text-brand-accent font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                Converting... {Math.round(displayProgress)}%
+              </p>
+            )}
+            {file.status === 'completed' && file.result && (
+              <p className="text-xs text-brand-success font-medium">✓ Converted</p>
             )}
 
             {/* Actions */}
@@ -423,20 +464,6 @@ function FileListItem({
             <div className="mb-2 p-2 rounded bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
               <p className="text-xs text-red-800 dark:text-red-300 leading-relaxed">{file.error}</p>
             </div>
-          )}
-
-          {/* Status Messages - Processing and Queued */}
-          {file.status === 'queued' && isConverting && (
-            <p className="text-xs text-brand-text-secondary font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-              Queued...
-            </p>
-          )}
-          {file.status === 'processing' && (
-            <p className="text-xs text-brand-accent font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-              Converting... {Math.round(displayProgress)}%
-            </p>
           )}
         </div>
       </div>

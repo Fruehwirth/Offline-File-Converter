@@ -115,7 +115,9 @@ export function DropZone({ disabled = false }: DropZoneProps) {
 
         <div className="flex-1">
           <p className="text-sm font-medium text-brand-text">Add more files</p>
-          <p className="text-xs text-brand-text-secondary">Drop files here or click to browse</p>
+          <p className="text-xs text-brand-text-secondary">
+            100% local • No uploads • No tracking • Any file type
+          </p>
         </div>
       </div>
     </div>

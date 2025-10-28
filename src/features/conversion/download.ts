@@ -14,10 +14,10 @@ export function downloadBlob(blob: Blob, filename: string): void {
   link.href = url
   link.download = filename
   link.style.display = 'none'
-  
+
   document.body.appendChild(link)
   link.click()
-  
+
   // Cleanup
   setTimeout(() => {
     document.body.removeChild(link)
@@ -41,7 +41,8 @@ export function downloadMultiple(files: Array<{ blob: Blob; filename: string }>)
  * Create a ZIP archive from multiple files
  */
 export async function createZipArchive(
-  files: Array<{ blob: Blob; filename: string }>
+  files: Array<{ blob: Blob; filename: string }>,
+  onProgress?: (progress: number) => void
 ): Promise<Blob> {
   const zip = new JSZip()
 
@@ -55,14 +56,22 @@ export async function createZipArchive(
     zip.file(uniqueName, blob)
   })
 
-  // Generate ZIP blob
-  return await zip.generateAsync({
-    type: 'blob',
-    compression: 'DEFLATE',
-    compressionOptions: {
-      level: 6,
+  // Generate ZIP blob with progress tracking
+  return await zip.generateAsync(
+    {
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: {
+        level: 6,
+      },
     },
-  })
+    metadata => {
+      // JSZip provides progress as a percentage (0-100)
+      if (onProgress && metadata.percent !== undefined) {
+        onProgress(metadata.percent)
+      }
+    }
+  )
 }
 
 /**
@@ -70,9 +79,10 @@ export async function createZipArchive(
  */
 export async function downloadAsZip(
   files: Array<{ blob: Blob; filename: string }>,
-  zipFilename = 'converted-files.zip'
+  zipFilename = 'converted-files.zip',
+  onProgress?: (progress: number) => void
 ): Promise<void> {
-  const zipBlob = await createZipArchive(files)
+  const zipBlob = await createZipArchive(files, onProgress)
   downloadBlob(zipBlob, zipFilename)
 }
 
@@ -81,7 +91,8 @@ export async function downloadAsZip(
  */
 export async function downloadFiles(
   files: Array<{ blob: Blob; filename: string }>,
-  strategy: 'single' | 'multiple' | 'zip' | 'auto' = 'auto'
+  strategy: 'single' | 'multiple' | 'zip' | 'auto' = 'auto',
+  onProgress?: (progress: number) => void
 ): Promise<void> {
   if (files.length === 0) {
     throw new Error('No files to download')
@@ -102,14 +113,13 @@ export async function downloadFiles(
         downloadBlob(files[0].blob, files[0].filename)
       }
       break
-    
+
     case 'multiple':
       downloadMultiple(files)
       break
-    
+
     case 'zip':
-      await downloadAsZip(files)
+      await downloadAsZip(files, 'converted-files.zip', onProgress)
       break
   }
 }
-

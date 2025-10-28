@@ -3,10 +3,9 @@
  * Orchestrates the entire conversion workflow
  */
 
-import { useRef, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useConversionStore } from '../features/state/useConversionStore'
 import { Header } from '../components/Header'
-import { Footer } from '../components/Footer'
 import { EmptyState } from '../components/EmptyState'
 import { FileList } from '../components/FileList'
 import { TargetFormatSelector } from '../components/TargetFormatSelector'
@@ -18,7 +17,6 @@ import { downloadFiles } from '../features/conversion/download'
 import { announceToScreenReader } from '../utils/accessibility'
 import { getFormat, type FormatId } from '../features/conversion/formatRegistry'
 import { findCommonTargets } from '../features/conversion/commonDenominators'
-import { getTranscodingWarning } from '../features/conversion/audioFormatUtils'
 
 /**
  * Detect format from MIME type (for handling fallback conversions)
@@ -41,7 +39,8 @@ function detectFormatFromMime(mimeType: string): FormatId | null {
 }
 
 export function App() {
-  const dropZoneRef = useRef<HTMLInputElement>(null)
+  const [downloadProgress, setDownloadProgress] = useState(0)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Prevent default drag & drop behavior on the entire page
   useEffect(() => {
@@ -82,22 +81,6 @@ export function App() {
     announceToScreenReader('Conversion started')
 
     const filesToConvert = files.filter(f => f.sourceFormat && f.status !== 'completed')
-
-    // Show transcoding warning if applicable
-    if (selectedTargetFormat) {
-      const sourceFormats = filesToConvert
-        .map(f => f.sourceFormat)
-        .filter((format): format is FormatId => format !== null)
-
-      const warning = getTranscodingWarning(sourceFormats, selectedTargetFormat)
-      if (warning) {
-        addToast({
-          type: 'warning',
-          message: warning,
-          duration: 8000,
-        })
-      }
-    }
 
     // Convert all files concurrently using Promise.allSettled
     // This allows multiple conversions to run simultaneously
@@ -188,11 +171,6 @@ export function App() {
     }, 0)
 
     announceToScreenReader(`Conversion complete. ${successCount} file(s) converted.`)
-
-    addToast({
-      type: 'success',
-      message: `Conversion complete! ${successCount} file(s) converted.`,
-    })
   }
 
   const handleDownloadAll = async () => {
@@ -203,17 +181,20 @@ export function App() {
     const allResults = completedFiles.flatMap(f => f.result ?? [])
 
     try {
-      await downloadFiles(allResults)
+      setIsDownloading(true)
+      setDownloadProgress(0)
 
-      addToast({
-        type: 'success',
-        message: `Downloaded ${allResults.length} file(s)`,
+      await downloadFiles(allResults, 'auto', progress => {
+        setDownloadProgress(progress)
       })
     } catch (error) {
       addToast({
         type: 'error',
         message: 'Download failed',
       })
+    } finally {
+      setIsDownloading(false)
+      setDownloadProgress(0)
     }
   }
 
@@ -290,17 +271,52 @@ export function App() {
               {hasResults && files.length > 1 && (
                 <button
                   onClick={handleDownloadAll}
-                  disabled={isConverting}
+                  disabled={isConverting || isDownloading}
                   className="
                     px-6 py-4 rounded-brand font-medium text-lg
                     bg-brand-bg-secondary hover:bg-brand-bg-hover
                     text-brand-text border border-brand-border
-                    transition-colors
+                    transition-colors relative overflow-hidden
                     focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
                     disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 >
-                  Download All
+                  {/* Progress background overlay */}
+                  {isDownloading && (
+                    <div
+                      className="absolute inset-0 bg-blue-400/20 dark:bg-blue-500/20 transition-all duration-200"
+                      style={{
+                        width: `${downloadProgress}%`,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isDownloading && (
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    )}
+                    {isDownloading
+                      ? `Preparing... ${Math.round(downloadProgress)}%`
+                      : 'Download All'}
+                  </span>
                 </button>
               )}
             </div>
@@ -308,7 +324,6 @@ export function App() {
         )}
       </main>
 
-      <Footer />
       <Toast />
     </div>
   )

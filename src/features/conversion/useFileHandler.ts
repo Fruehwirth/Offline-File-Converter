@@ -17,7 +17,7 @@ export function useFileHandler() {
     if (!files || files.length === 0) return
 
     const fileArray = Array.from(files)
-    
+
     // Check for oversized files
     const oversized = fileArray.filter(f => exceedsLimit(f.size))
     if (oversized.length > 0) {
@@ -25,7 +25,7 @@ export function useFileHandler() {
         type: 'error',
         message: `Some files exceed ${formatBytes(MAX_FILE_SIZE)} limit and were skipped: ${oversized.map(f => f.name).join(', ')}`,
       })
-      
+
       const validFiles = fileArray.filter(f => !exceedsLimit(f.size))
       if (validFiles.length === 0) return
     }
@@ -37,7 +37,7 @@ export function useFileHandler() {
       validFiles.map(async file => {
         try {
           const { format, confidence } = await detectFormat(file)
-          
+
           if (!format) {
             addToast({
               type: 'warning',
@@ -49,32 +49,32 @@ export function useFileHandler() {
               message: `Format detection for ${file.name} is based on file extension only`,
             })
           }
-          
+
           return { file, sourceFormat: format, error: undefined }
         } catch (error) {
           // Capture file read errors (e.g., deleted files from download manager)
           const errorType = error instanceof Error ? error.constructor.name : 'Error'
           const errorMessage = error instanceof Error ? error.message : String(error)
-          
-          return { 
-            file, 
-            sourceFormat: null, 
-            error: `${errorType}: ${errorMessage}` 
+
+          return {
+            file,
+            sourceFormat: null,
+            error: `${errorType}: ${errorMessage}`,
           }
         }
       })
     )
 
     // Separate successful and failed files
-    const detectedFiles = filesWithFormats.filter(({ sourceFormat, error }) => 
-      sourceFormat !== null && !error
+    const detectedFiles = filesWithFormats.filter(
+      ({ sourceFormat, error }) => sourceFormat !== null && !error
     )
     const failedFiles = filesWithFormats.filter(({ error }) => error !== undefined)
-    
+
     // Add failed files to store with error status
     if (failedFiles.length > 0) {
       addFiles(failedFiles.map(({ file, sourceFormat, error }) => ({ file, sourceFormat })))
-      
+
       // Mark files as error immediately
       setTimeout(() => {
         const updateFileStatus = useConversionStore.getState().updateFileStatus
@@ -88,7 +88,7 @@ export function useFileHandler() {
         })
       }, 0)
     }
-    
+
     if (detectedFiles.length === 0 && failedFiles.length === 0) {
       addToast({
         type: 'error',
@@ -100,31 +100,26 @@ export function useFileHandler() {
     // Add successful files to store
     if (detectedFiles.length > 0) {
       addFiles(detectedFiles)
-      
+
       // Compute available targets
       const sourceFormats = detectedFiles
         .map(({ sourceFormat }) => sourceFormat!)
         .filter((format, index, arr) => arr.indexOf(format) === index)
-      
+
       const commonTargets = findCommonTargets(sourceFormats)
       setAvailableTargets(commonTargets)
 
       // Show compatibility message
       const { canConvert, message } = buildCompatibilityMessage(sourceFormats)
-      
+
       if (!canConvert) {
         addToast({
           type: 'warning',
           message,
         })
-      } else {
-        addToast({
-          type: 'success',
-          message: `Added ${detectedFiles.length} file(s)`,
-        })
       }
     }
-    
+
     // Show error summary if there were failed files
     if (failedFiles.length > 0 && detectedFiles.length === 0) {
       addToast({
@@ -136,4 +131,3 @@ export function useFileHandler() {
 
   return { handleFiles }
 }
-

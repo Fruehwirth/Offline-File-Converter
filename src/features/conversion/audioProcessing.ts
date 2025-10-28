@@ -27,42 +27,113 @@ export interface ConversionProgress {
   message?: string
 }
 
-// Singleton FFmpeg instance for reuse
-let ffmpegInstance: any = null
-let ffmpegLoading: Promise<any> | null = null
+// FFmpeg instance pool for concurrent conversions
+const FFMPEG_POOL_SIZE = 3 // Allow 3 concurrent FFmpeg conversions
+interface FFmpegPoolItem {
+  instance: any
+  busy: boolean
+}
+let ffmpegPool: FFmpegPoolItem[] = []
+let poolInitialized = false
+
+// Queue system for FFmpeg conversions
+interface QueuedTask {
+  task: (ffmpeg: any) => Promise<any>
+  resolve: (value: any) => void
+  reject: (error: any) => void
+}
+let ffmpegQueue: QueuedTask[] = []
 
 /**
- * Get or initialize FFmpeg instance (singleton pattern)
- * Using FFmpeg 0.11.x which is more stable
+ * Initialize FFmpeg pool with multiple instances
  */
-async function getFFmpeg(): Promise<any> {
-  if (ffmpegInstance) {
-    return ffmpegInstance
-  }
+async function initializeFFmpegPool(): Promise<void> {
+  if (poolInitialized) return
 
-  if (ffmpegLoading) {
-    return ffmpegLoading
-  }
+  console.log(`[FFmpeg Pool] Initializing pool with ${FFMPEG_POOL_SIZE} instances...`)
+  poolInitialized = true
 
-  ffmpegLoading = (async () => {
-    console.log('[FFmpeg 0.11] Starting initialization...')
+  // Create all instances in parallel
+  const initPromises = Array.from({ length: FFMPEG_POOL_SIZE }, async (_, index) => {
+    console.log(`[FFmpeg Pool] Creating instance ${index + 1}/${FFMPEG_POOL_SIZE}...`)
 
     const ffmpeg = createFFmpeg({
-      log: true,
+      log: index === 0, // Only log from first instance to avoid spam
       corePath: '/ffmpeg-core.js',
       workerPath: '/ffmpeg-core.worker.js',
     })
 
-    console.log('[FFmpeg 0.11] Loading core...')
     await ffmpeg.load()
-    console.log('[FFmpeg 0.11] Successfully loaded!')
+    console.log(`[FFmpeg Pool] Instance ${index + 1} loaded`)
 
-    ffmpegInstance = ffmpeg
-    ffmpegLoading = null
-    return ffmpeg
-  })()
+    return {
+      instance: ffmpeg,
+      busy: false,
+    }
+  })
 
-  return ffmpegLoading
+  ffmpegPool = await Promise.all(initPromises)
+  console.log(`[FFmpeg Pool] All ${FFMPEG_POOL_SIZE} instances ready!`)
+
+  // Process any queued tasks
+  processFFmpegQueue()
+}
+
+/**
+ * Process FFmpeg queue (allows multiple concurrent conversions up to pool size)
+ */
+function processFFmpegQueue(): void {
+  while (ffmpegQueue.length > 0) {
+    // Find available instance
+    const available = ffmpegPool.find(item => !item.busy)
+    if (!available) {
+      // All instances busy, wait for one to free up
+      return
+    }
+
+    // Get next task from queue
+    const queuedTask = ffmpegQueue.shift()
+    if (!queuedTask) return
+
+    // Mark instance as busy
+    available.busy = true
+
+    // Run task with this instance
+    queuedTask
+      .task(available.instance)
+      .then(result => {
+        queuedTask.resolve(result)
+      })
+      .catch(error => {
+        queuedTask.reject(error)
+      })
+      .finally(() => {
+        // Release instance and process next task
+        available.busy = false
+        processFFmpegQueue()
+      })
+  }
+}
+
+/**
+ * Add a task to the FFmpeg queue
+ */
+function queueFFmpegTask<T>(task: (ffmpeg: any) => Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    ffmpegQueue.push({
+      task,
+      resolve,
+      reject,
+    })
+
+    // Try to process immediately if pool is ready and has available instances
+    if (poolInitialized) {
+      processFFmpegQueue()
+    } else {
+      // Initialize pool if not already done
+      initializeFFmpegPool()
+    }
+  })
 }
 
 /**
@@ -172,57 +243,75 @@ async function convertAudioWithFFmpeg(
   onProgress?: (progress: ConversionProgress) => void
 ): Promise<Blob> {
   console.log('[convertAudioWithFFmpeg] Starting conversion:', file.name, 'to', targetFormat)
-  onProgress?.({ percent: 0, message: 'Loading FFmpeg...' })
+  onProgress?.({ percent: 0, message: 'Queued...' })
 
-  const inputFileName = `input.${file.name.split('.').pop() || 'audio'}`
-  const outputFileName = `output.${targetFormat}`
+  // Use unique file names to avoid conflicts between concurrent conversions
+  const timestamp = Date.now()
+  const random = Math.floor(Math.random() * 10000)
+  const inputFileName = `input_${timestamp}_${random}.${file.name.split('.').pop() || 'audio'}`
+  const outputFileName = `output_${timestamp}_${random}.${targetFormat}`
 
-  try {
-    const ffmpeg = await getFFmpeg()
-    console.log('[convertAudioWithFFmpeg] FFmpeg 0.11 loaded')
-
-    onProgress?.({ percent: 10, message: 'Preparing audio...' })
-
-    // Write input file to FFmpeg's virtual filesystem (0.11 API)
-    ffmpeg.FS('writeFile', inputFileName, await fetchFile(file))
-    console.log('[convertAudioWithFFmpeg] Input file written')
-
-    onProgress?.({ percent: 20, message: 'Encoding audio...' })
-
-    // Build FFmpeg command
-    const ffmpegArgs = buildFFmpegArgs(targetFormat, inputFileName, outputFileName, options)
-    console.log('[convertAudioWithFFmpeg] Running:', ffmpegArgs.join(' '))
-
-    // Run FFmpeg (0.11 API)
-    await ffmpeg.run(...ffmpegArgs)
-    console.log('[convertAudioWithFFmpeg] Conversion complete')
-
-    onProgress?.({ percent: 90, message: 'Reading output...' })
-
-    // Read output file (0.11 API)
-    const data = ffmpeg.FS('readFile', outputFileName)
-
-    // Clean up
+  // Queue the conversion - will run when an FFmpeg instance is available
+  return queueFFmpegTask(async ffmpeg => {
     try {
-      ffmpeg.FS('unlink', inputFileName)
-      ffmpeg.FS('unlink', outputFileName)
-    } catch (e) {
-      // Ignore cleanup errors
+      onProgress?.({ percent: 0, message: 'Starting...' })
+
+      // Write input file to FFmpeg's virtual filesystem (0.11 API)
+      ffmpeg.FS('writeFile', inputFileName, await fetchFile(file))
+      console.log('[convertAudioWithFFmpeg] Input file written:', inputFileName)
+
+      onProgress?.({ percent: 5, message: 'Encoding...' })
+
+      // Build FFmpeg command
+      const ffmpegArgs = buildFFmpegArgs(targetFormat, inputFileName, outputFileName, options)
+      console.log('[convertAudioWithFFmpeg] Running:', ffmpegArgs.join(' '))
+
+      // Set up progress monitoring
+      ffmpeg.setProgress(({ ratio }: { ratio: number }) => {
+        // ratio is 0-1, map to 5-95%
+        const percent = Math.min(95, Math.max(5, Math.floor(5 + ratio * 90)))
+        onProgress?.({ percent, message: `Encoding... ${Math.floor(ratio * 100)}%` })
+      })
+
+      // Run FFmpeg (0.11 API)
+      await ffmpeg.run(...ffmpegArgs)
+      console.log('[convertAudioWithFFmpeg] Conversion complete:', outputFileName)
+
+      onProgress?.({ percent: 95, message: 'Reading output...' })
+
+      // Read output file (0.11 API)
+      const data = ffmpeg.FS('readFile', outputFileName)
+
+      // Clean up
+      try {
+        ffmpeg.FS('unlink', inputFileName)
+        ffmpeg.FS('unlink', outputFileName)
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+
+      // Convert to Blob
+      const mimeType = getMimeType(targetFormat)
+      const blob = new Blob([data.buffer], { type: mimeType })
+
+      onProgress?.({ percent: 100, message: 'Complete!' })
+      console.log('[convertAudioWithFFmpeg] Success! Size:', blob.size)
+      return blob
+    } catch (error) {
+      // Clean up on error
+      try {
+        ffmpeg.FS('unlink', inputFileName)
+        ffmpeg.FS('unlink', outputFileName)
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+
+      console.error('[convertAudioWithFFmpeg] Error:', error)
+      throw new Error(
+        `FFmpeg conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
-
-    // Convert to Blob
-    const mimeType = getMimeType(targetFormat)
-    const blob = new Blob([data.buffer], { type: mimeType })
-
-    onProgress?.({ percent: 100, message: 'Complete!' })
-    console.log('[convertAudioWithFFmpeg] Success! Size:', blob.size)
-    return blob
-  } catch (error) {
-    console.error('[convertAudioWithFFmpeg] Error:', error)
-    throw new Error(
-      `FFmpeg conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    )
-  }
+  })
 }
 
 /**
