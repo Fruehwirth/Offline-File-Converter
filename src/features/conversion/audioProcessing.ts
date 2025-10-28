@@ -59,8 +59,8 @@ async function initializeFFmpegPool(): Promise<void> {
 
     const ffmpeg = createFFmpeg({
       log: index === 0, // Only log from first instance to avoid spam
-      corePath: '/ffmpeg-core.js',
-      workerPath: '/ffmpeg-core.worker.js',
+      corePath: `${import.meta.env.BASE_URL}ffmpeg-core.js`,
+      workerPath: `${import.meta.env.BASE_URL}ffmpeg-core.worker.js`,
     })
 
     await ffmpeg.load()

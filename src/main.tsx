@@ -20,6 +20,14 @@ try {
   console.error('CSP validation failed:', error)
 }
 
+// Register Service Worker for COOP/COEP headers (required for GitHub Pages)
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  navigator.serviceWorker
+    .register('/offline-file-converter/sw.js')
+    .then(() => console.log('Service Worker registered for COOP/COEP support'))
+    .catch(error => console.error('Service Worker registration failed:', error))
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
@@ -27,4 +35,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ThemeProvider>
   </React.StrictMode>
 )
-
