@@ -20,12 +20,12 @@ try {
   console.error('CSP validation failed:', error)
 }
 
-// Register Service Worker for COOP/COEP headers (required for GitHub Pages)
+// Register Service Worker for COOP/COEP headers
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   // Check if Service Worker is controlling the page
   if (!navigator.serviceWorker.controller) {
     // First visit - need to register SW and reload
-    navigator.serviceWorker.register('/Offline-File-Converter/sw.js').then(registration => {
+    navigator.serviceWorker.register('/sw.js').then(registration => {
       console.log('Service Worker registered. Reloading page for COOP/COEP headers...')
       // Wait for SW to activate, then reload
       registration.addEventListener('updatefound', () => {

@@ -1,15 +1,15 @@
-# 🚀 GitHub Pages Quick Setup
+# 🚀 Deployment Setup (Custom Domain)
 
-## What I've Done For You
+## What's Been Configured
 
-I've configured everything needed for GitHub Pages deployment. Here's what changed:
+Everything is configured for deployment to a custom domain (localconvert.org). Here's what's set up:
 
 ### Files Modified
 
-- ✅ `vite.config.ts` - Added base path `/Offline-File-Converter/`
-- ✅ `src/main.tsx` - Added Service Worker registration
+- ✅ `vite.config.ts` - Base path set to `/` for custom domain
+- ✅ `src/main.tsx` - Service Worker registration configured
 - ✅ `index.html` - Updated CSP for Service Worker support
-- ✅ `src/features/conversion/audioProcessing.ts` - Fixed FFmpeg paths for base URL
+- ✅ `src/features/conversion/audioProcessing.ts` - FFmpeg paths configured
 
 ### Files Created
 
@@ -40,7 +40,7 @@ git push origin main
 
 1. Go to: https://github.com/fruehwirth/offline-file-converter/actions
 2. Watch the workflow run (takes ~2-3 minutes first time)
-3. Once complete, visit: **https://fruehwirth.github.io/Offline-File-Converter/**
+3. Once complete, visit: **https://localconvert.org**
 
 ---
 
@@ -95,10 +95,10 @@ The Service Worker (`public/sw.js`) intercepts requests and adds these headers, 
 
 ## 🎓 Important Notes
 
-- **Local dev still works**: `npm run dev` uses `/` base path (automatic)
-- **Production uses**: `/offline-file-converter/` base path
+- **Local dev and production**: Both use `/` base path (custom domain)
 - **Service Worker**: Only registers in production (not in dev mode)
 - **First visit**: May need one refresh for Service Worker to activate
+- **Custom domain**: Site is deployed at localconvert.org
 
 ---
 
@@ -137,6 +137,6 @@ You're ready to deploy. Just:
 3. Wait 2 minutes
 4. Visit your site!
 
-**Your site will be at**: https://fruehwirth.github.io/Offline-File-Converter/
+**Your site is live at**: https://localconvert.org
 
 Good luck! 🚀

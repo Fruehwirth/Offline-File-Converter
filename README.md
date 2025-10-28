@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2-blue)](https://react.dev/)
 
-[**Live Demo**](#getting-started) • [**Features**](#features) • [**Privacy**](#privacy-guarantees) • [**Development**](#development)
+[**🚀 Try It Live**](https://localconvert.org) • [**Features**](#features) • [**Privacy**](#privacy-guarantees) • [**Development**](#development)
 
 </div>
 
@@ -87,12 +87,18 @@
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Try It Online
+
+Visit **[localconvert.org](https://localconvert.org)** to use the app right away – no installation needed!
+
+### Local Development
+
+#### Prerequisites
 
 - **Node.js** 18+ and npm
 - Modern browser with Web Workers and OffscreenCanvas support
 
-### Installation
+#### Installation
 
 ```bash
 # Clone the repository
@@ -108,7 +114,7 @@ npm run dev
 
 Visit `http://localhost:5173`
 
-### Building for Production
+#### Building for Production
 
 ```bash
 npm run build

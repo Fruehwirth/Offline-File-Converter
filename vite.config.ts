@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => ({
-  // Use '/' for development, '/Offline-File-Converter/' for production (GitHub Pages)
-  base: mode === 'production' ? '/Offline-File-Converter/' : '/',
+  // Use '/' for both development and production (custom domain)
+  base: '/',
   plugins: [
     react(),
     {
