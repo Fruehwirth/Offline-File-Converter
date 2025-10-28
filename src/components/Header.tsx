@@ -7,8 +7,15 @@ import { ThemeToggle } from './ThemeToggle'
 
 export function Header() {
   return (
-    <header className="border-b border-brand-border bg-brand-bg/80 backdrop-blur-sm sticky top-0 z-40">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-40 relative">
+      <div
+        className="absolute inset-0 bg-brand-bg/80 backdrop-blur-sm"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+        }}
+      />
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-brand bg-brand-accent flex items-center justify-center">
             <svg

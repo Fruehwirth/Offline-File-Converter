@@ -6,7 +6,6 @@
 import { useConversionStore } from '../features/state/useConversionStore'
 import { getFormatLabel, type FormatId } from '../features/conversion/formatRegistry'
 import { OptionsMenu } from './OptionsMenu'
-import { getTranscodingWarning } from '../features/conversion/audioFormatUtils'
 
 // Format descriptions for tooltips
 const FORMAT_DESCRIPTIONS: Record<FormatId, string> = {
@@ -38,18 +37,12 @@ function getFormatTooltip(format: FormatId): string {
 
 interface TargetFormatSelectorProps {
   disabled?: boolean
-  actionButton?: React.ReactNode
 }
 
-export function TargetFormatSelector({
-  disabled = false,
-  actionButton,
-}: TargetFormatSelectorProps) {
+export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorProps) {
   const availableTargets = useConversionStore(state => state.availableTargets)
   const selectedTargetFormat = useConversionStore(state => state.selectedTargetFormat)
   const setSelectedTargetFormat = useConversionStore(state => state.setSelectedTargetFormat)
-  const files = useConversionStore(state => state.files)
-  const addToast = useConversionStore(state => state.addToast)
 
   if (availableTargets.length === 0) {
     return null
@@ -58,21 +51,6 @@ export function TargetFormatSelector({
   const handleFormatClick = (format: string) => {
     if (disabled) return
     setSelectedTargetFormat(format as any)
-
-    // Show quality loss warning immediately if applicable
-    const sourceFormats = files
-      .map(f => f.sourceFormat)
-      .filter((fmt): fmt is FormatId => fmt !== null)
-      .filter((fmt, index, arr) => arr.indexOf(fmt) === index)
-
-    const warning = getTranscodingWarning(sourceFormats, format as FormatId)
-    if (warning) {
-      addToast({
-        type: 'warning',
-        message: warning,
-        duration: 4000,
-      })
-    }
   }
 
   return (
@@ -116,9 +94,6 @@ export function TargetFormatSelector({
           </p>
         )}
       </div>
-
-      {/* Action button below */}
-      {actionButton && <div className="flex justify-end">{actionButton}</div>}
     </div>
   )
 }
