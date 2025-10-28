@@ -22,10 +22,28 @@ try {
 
 // Register Service Worker for COOP/COEP headers (required for GitHub Pages)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  navigator.serviceWorker
-    .register('/Offline-File-Converter/sw.js')
-    .then(() => console.log('Service Worker registered for COOP/COEP support'))
-    .catch(error => console.error('Service Worker registration failed:', error))
+  // Check if Service Worker is controlling the page
+  if (!navigator.serviceWorker.controller) {
+    // First visit - need to register SW and reload
+    navigator.serviceWorker.register('/Offline-File-Converter/sw.js').then(registration => {
+      console.log('Service Worker registered. Reloading page for COOP/COEP headers...')
+      // Wait for SW to activate, then reload
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing
+        newWorker?.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            window.location.reload()
+          }
+        })
+      })
+      // If already activated, reload immediately
+      if (registration.active) {
+        window.location.reload()
+      }
+    })
+  } else {
+    console.log('Service Worker is active and controlling the page')
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

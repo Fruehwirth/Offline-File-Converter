@@ -30,12 +30,12 @@ describe('csp', () => {
       expect(result.errors.length).toBeGreaterThan(0)
     })
 
-    it('should pass with valid CSP', () => {
+    it('should pass with valid CSP (connect-src self)', () => {
       const meta = document.createElement('meta')
       meta.setAttribute('http-equiv', 'Content-Security-Policy')
       meta.setAttribute(
         'content',
-        "default-src 'self'; connect-src 'none'; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+        "default-src 'self'; connect-src 'self'; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
       )
       document.head.appendChild(meta)
 
@@ -44,18 +44,18 @@ describe('csp', () => {
       expect(result.errors).toHaveLength(0)
     })
 
-    it('should fail if connect-src allows network', () => {
+    it('should fail if connect-src is missing', () => {
       const meta = document.createElement('meta')
       meta.setAttribute('http-equiv', 'Content-Security-Policy')
       meta.setAttribute(
         'content',
-        "default-src 'self'; connect-src 'self'; img-src 'self' blob: data:;"
+        "default-src 'self'; img-src 'self' blob: data:;"
       )
       document.head.appendChild(meta)
 
       const result = validateCSP()
       expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.includes("connect-src"))).toBe(true)
+      expect(result.errors.some(e => e.includes('connect-src'))).toBe(true)
     })
   })
 

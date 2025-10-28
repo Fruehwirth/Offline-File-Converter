@@ -4,9 +4,7 @@
 
 const EXPECTED_CSP_DIRECTIVES = {
   'default-src': ["'self'"],
-  'connect-src': import.meta.env?.DEV 
-    ? ["'self'"] // In development, allow localhost for HMR
-    : ["'none'"], // In production, no connections allowed
+  'connect-src': ["'self'"], // Allow self for Service Worker to fetch resources
   'img-src': ["'self'", 'blob:', 'data:'],
   'media-src': ["'self'", 'blob:', 'data:'],
   'font-src': ["'self'"],
