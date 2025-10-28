@@ -285,9 +285,12 @@ async function encodeOGG(
   // Quality scale is -1.0 (worst) to 10.0 (best)
   const quality = Math.max(-1, Math.min(10, (bitrate / 192) * 5.0))
 
+  // Ensure channels is 1 or 2 (library requirement)
+  const channels = (numChannels === 2 ? 2 : 1) as 1 | 2
+
   encoder.configure({
     sampleRate,
-    channels: numChannels,
+    channels,
     vbrQuality: quality,
   })
 

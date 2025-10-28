@@ -105,13 +105,14 @@ disabled={!canConvert && !isConverting && (!availableTargets.length || selectedT
 className={`
   absolute left-0 right-0 bottom-0 z-10
   transition-all duration-300 ease-out overflow-hidden origin-bottom
-  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 
-    ? 'max-h-[500px] pointer-events-auto' 
+  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0
+    ? 'max-h-[500px] pointer-events-auto'
     : 'max-h-0 pointer-events-none'}
 `}
 ```
 
 **Positioning**:
+
 - **Behind buttons**: `z-10` (buttons are z-20)
 - **Bottom-aligned**: `bottom-0` with container margins
 - **Grows upward**: Drawer expands vertically from bottom when opened
@@ -120,11 +121,13 @@ className={`
 - `overflow-hidden` prevents content from showing during collapse
 
 **Interaction**:
+
 - `pointer-events-auto` when open (drawer is clickable)
 - `pointer-events-none` when closed (doesn't block button clicks)
 - Drawer only visible if: `isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0`
 
 **Layout Integration**:
+
 - Drawer grows behind the button system
 - Button system (z-20) always stays on top
 - Smooth 300ms transition matches button animations
@@ -145,26 +148,57 @@ Automatically closes drawer when user selects a format, providing seamless UX.
 
 ### Drawer Container
 
-- Background: `bg-brand-bg-secondary`
-- Border: `border border-brand-border`
-- Rounded corners: `rounded-brand`
-- Padding: `p-4`
-- Bottom margin: `mb-4` (space between drawer and button)
+- **Background**: `bg-brand-bg-secondary` (solid, no transparency)
+- **Border**: `border border-brand-border` (1px solid)
+- **Rounded corners**: `rounded-[36px]` (pill-shaped, fully rounded)
+- **Padding**: `p-4` (16px all sides)
+- **Bottom margin**: `mb-4` (space between drawer and buttons)
+- **Shadow**: `shadow-2xl` (depth and elevation)
 
 ### Cancel Button (inside drawer)
 
-- Full width: `w-full`
-- Border: `border-brand-border`
-- Background: `bg-gray-100 dark:bg-black/20`
-- Hover: `hover:bg-gray-200 dark:hover:bg-black/30`
-- Top margin: `mt-4` (space from format selector)
+- **Full width**: `w-full`
+- **Shape**: `rounded-full` (pill-shaped to match drawer)
+- **Border**: `border border-brand-border`
+- **Background**: `bg-gray-100 dark:bg-black/20` (solid)
+- **Hover**: `hover:bg-gray-200 dark:hover:bg-black/30` (smooth transition)
+- **Top margin**: `mt-4` (space from format selector)
+- **Transition**: `transition-all` (smooth hover effect)
 
-### Main Action Button
+### Main Action Button (Pick Filetype / Convert)
 
-- Height: `72px` (fixed)
-- Blue accent when enabled: `bg-brand-accent hover:bg-brand-accent-hover`
-- Gray when disabled: `bg-gray-300/50 dark:bg-gray-700/50`
-- Shows "Pick filetype" or "Convert" based on `selectedTargetFormat`
+- **Height**: `72px` (fixed, matches button system)
+- **Shape**: `rounded-full` (pill-shaped)
+- **Accent color**: `bg-brand-accent hover:bg-brand-accent-hover` (solid, no transparency)
+- **Disabled color**: `bg-gray-400 dark:bg-gray-700` (solid, no transparency)
+- **Text**: Shows "Pick filetype" or "Convert" based on `selectedTargetFormat`
+- **Icons**: `w-6 h-6` with `shrink-0` to prevent compression
+- **Text**: `whitespace-nowrap` to prevent wrapping
+- **Width**: Animates between 0% and 100% based on state (see DynamicButtonSystem spec)
+
+## Integration with Dynamic Button System
+
+The FileType Picker drawer is integrated with the dynamic button system:
+
+### Z-Index Layering (bottom to top):
+
+1. **Frosted backdrop**: pointer-events: none (visual only)
+2. **Drawer** (z-10): Behind buttons, grows upward
+3. **Button system** (z-20): Always on top, receives all clicks
+
+### State-Based Visibility:
+
+- **Drawer visible**: When `isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0`
+- **Main button visible**: When `!allFilesConverted`
+- **Convert Again + Download visible**: When `allFilesConverted`
+
+### Width Coordination:
+
+- Drawer uses same container margins as buttons (`CONTAINER_PADDING`)
+- All elements share `max-width: 630px` constraint
+- Maintains visual alignment across drawer and buttons
+
+See **DynamicButtonSystem.mdc** for detailed button animation specifications.
 
 ## Integration with FileList
 
@@ -183,21 +217,51 @@ The "Add More Files" button is rendered **inside** `FileList.tsx` at the end of 
 
 ## Common Pitfalls
 
-1. **Button Disabled Too Early**: Don't disable the button when no format is selected - it needs to be clickable to open drawer
-2. **Drawer Doesn't Show**: Check that `availableTargets.length > 0` and targets are being calculated
-3. **Hover Issues**: The disabled cursor-blocked was caused by strict disabled logic, not hover states
-4. **Width Misalignment**: All elements (FileList, Add Files, Drawer, Button) share same container with `max-width: 630px`
-5. **Parent Positioning**: The drawer's parent container must have `position: relative` for absolute positioning to work correctly
-6. **Z-Index Issues**: Drawer needs high z-index (z-50) to appear above scrollable file list content
+1. **Button Disabled Too Early**: Don't disable button when no format selected - must be clickable to open drawer
+2. **Drawer Doesn't Show**: Verify `availableTargets.length > 0` and targets calculation works
+3. **Z-Index Conflicts**: Drawer (z-10) must be below buttons (z-20) but above backdrop
+4. **Width Misalignment**: All elements share `max-width: 630px` with same padding (`CONTAINER_PADDING`)
+5. **Pointer Events**: Drawer needs `pointer-events-none` when collapsed to not block button clicks
+6. **Animation Conflicts**: Drawer 300ms transition must not conflict with button width animations
+7. **Transparency Issues**: Use solid colors, not alpha values (except for dark mode overlays)
+8. **Border Radius**: Use `rounded-[36px]` for drawer, `rounded-full` for buttons (pill-shaped)
 
 ## Testing Checklist
 
-- [ ] Upload files → Button becomes enabled
-- [ ] Click "Pick filetype" → Drawer slides up as overlay (doesn't push file list)
-- [ ] File list remains stationary when drawer opens/closes
-- [ ] Drawer appears above file list with visible shadow
-- [ ] Click format → Drawer closes automatically
-- [ ] Button shows "Convert" → Click starts conversion
-- [ ] Click "Cancel" in drawer → Drawer closes without selection
-- [ ] Add more files button appears at end of list
-- [ ] All elements have same width (630px max)
+### Drawer Functionality
+
+- [ ] Upload files → "Pick filetype" button becomes enabled
+- [ ] Click "Pick filetype" → Drawer slides up from behind buttons
+- [ ] Drawer grows upward, buttons stay in place (no layout shift)
+- [ ] Drawer has visible shadow and pill-shaped corners
+- [ ] Click format in drawer → Drawer auto-closes smoothly
+- [ ] Button changes to "Convert" with icon after selection
+- [ ] Click "Cancel" in drawer → Drawer closes, no format selected
+
+### Button System Integration
+
+- [ ] "Pick filetype" button has full width (100%) when visible
+- [ ] Button animates smoothly when converting (shows progress)
+- [ ] After conversion: Main button slides out (width → 0)
+- [ ] Convert Again button slides in (icon only, 72px square)
+- [ ] Download button slides in (fills remaining space)
+- [ ] All buttons maintain 72px height at all times
+- [ ] Buttons never shrink/compress - overflow clips if needed
+
+### Visual Design
+
+- [ ] All buttons are pill-shaped (`rounded-full`)
+- [ ] Drawer has rounded corners (`rounded-[36px]`)
+- [ ] No transparency in button backgrounds (solid colors)
+- [ ] Progress bars are solid colors (no alpha)
+- [ ] Icons have `shrink-0` and don't compress
+- [ ] Text has `whitespace-nowrap` and doesn't wrap
+- [ ] Hover states transition smoothly
+
+### Layout Consistency
+
+- [ ] All elements align with same max-width (630px)
+- [ ] Drawer and buttons share consistent padding
+- [ ] Z-index layering correct (backdrop < drawer < buttons)
+- [ ] Drawer doesn't block button clicks when collapsed
+- [ ] File list remains stationary during all transitions
