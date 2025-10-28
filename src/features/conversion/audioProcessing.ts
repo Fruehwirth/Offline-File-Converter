@@ -253,7 +253,20 @@ async function convertAudioWithFFmpeg(
 
   // Queue the conversion - will run when an FFmpeg instance is available
   return queueFFmpegTask(async ffmpeg => {
+    // Generate unique conversion ID to prevent cross-contamination
+    const conversionId = `${timestamp}_${random}`
+
     try {
+      // Clear any previous progress handler first and set the new conversion ID
+      ffmpeg.setProgress(() => {})
+      const previousId = ffmpeg._currentConversionId
+      ffmpeg._currentConversionId = conversionId
+      console.log(`[FFmpeg Worker] Starting conversion for ${file.name}`, {
+        conversionId,
+        previousId,
+        changed: previousId !== conversionId,
+      })
+
       onProgress?.({ percent: 0, message: 'Starting...' })
 
       // Write input file to FFmpeg's virtual filesystem (0.11 API)
@@ -266,10 +279,35 @@ async function convertAudioWithFFmpeg(
       const ffmpegArgs = buildFFmpegArgs(targetFormat, inputFileName, outputFileName, options)
       console.log('[convertAudioWithFFmpeg] Running:', ffmpegArgs.join(' '))
 
-      // Set up progress monitoring
+      // Track if encoding has truly started (not just file analysis)
+      let encodingStarted = false
+
+      // Set up progress monitoring with ID verification
       ffmpeg.setProgress(({ ratio }: { ratio: number }) => {
+        // Only process callbacks for the current conversion
+        if (ffmpeg._currentConversionId !== conversionId) {
+          console.warn('[FFmpeg Progress] Ignoring callback for wrong conversion:', {
+            expected: conversionId,
+            actual: ffmpeg._currentConversionId,
+            file: file.name,
+          })
+          return
+        }
+
+        // FFmpeg fires spurious callbacks with HIGH ratios (~0.99) during file analysis
+        // Ignore these and only start reporting once we see a reasonable ratio
+        if (!encodingStarted) {
+          // If first callback has abnormally high ratio (>90%), it's during file analysis - ignore it
+          if (ratio > 0.9) {
+            return
+          }
+          // Once we see a reasonable ratio, consider encoding started
+          encodingStarted = true
+        }
+
         // ratio is 0-1, map to 5-95%
         const percent = Math.min(95, Math.max(5, Math.floor(5 + ratio * 90)))
+        console.log(`[FFmpeg Progress] ${file.name}: ${percent}% (conversionId: ${conversionId})`)
         onProgress?.({ percent, message: `Encoding... ${Math.floor(ratio * 100)}%` })
       })
 
@@ -290,6 +328,9 @@ async function convertAudioWithFFmpeg(
         // Ignore cleanup errors
       }
 
+      // Clear progress handler immediately
+      ffmpeg.setProgress(() => {})
+
       // Convert to Blob
       const mimeType = getMimeType(targetFormat)
       const blob = new Blob([data.buffer], { type: mimeType })
@@ -305,6 +346,9 @@ async function convertAudioWithFFmpeg(
       } catch (e) {
         // Ignore cleanup errors
       }
+
+      // Clear progress handler even on error
+      ffmpeg.setProgress(() => {})
 
       console.error('[convertAudioWithFFmpeg] Error:', error)
       throw new Error(

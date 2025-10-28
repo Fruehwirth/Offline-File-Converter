@@ -46,6 +46,7 @@ interface ConversionStore {
   // UI state
   toasts: ToastMessage[]
   isConverting: boolean
+  allFilesConverted: boolean
 
   // Actions - File management
   addFiles: (files: Array<{ file: File; sourceFormat: FormatId | null }>) => void
@@ -69,6 +70,7 @@ interface ConversionStore {
 
   // Actions - Conversion
   setIsConverting: (isConverting: boolean) => void
+  setAllFilesConverted: (allFilesConverted: boolean) => void
   resetConversionStatus: () => void
 
   // Actions - Toasts
@@ -86,6 +88,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
 
   toasts: [],
   isConverting: false,
+  allFilesConverted: false,
 
   // File management
   addFiles: filesData => {
@@ -100,6 +103,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
 
       return {
         files: [...state.files, ...newFiles],
+        allFilesConverted: false,
       }
     })
   },
@@ -111,7 +115,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   },
 
   clearFiles: () => {
-    set({ files: [], selectedTargetFormat: null, availableTargets: [] })
+    set({ files: [], selectedTargetFormat: null, availableTargets: [], allFilesConverted: false })
   },
 
   updateFileStatus: (id, status, progress, error) => {
@@ -209,6 +213,10 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   // Conversion
   setIsConverting: isConverting => {
     set({ isConverting })
+  },
+
+  setAllFilesConverted: allFilesConverted => {
+    set({ allFilesConverted })
   },
 
   resetConversionStatus: () => {

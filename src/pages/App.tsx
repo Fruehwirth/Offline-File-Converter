@@ -58,8 +58,10 @@ export function App() {
   const files = useConversionStore(state => state.files)
   const selectedTargetFormat = useConversionStore(state => state.selectedTargetFormat)
   const isConverting = useConversionStore(state => state.isConverting)
+  const allFilesConverted = useConversionStore(state => state.allFilesConverted)
 
   const setIsConverting = useConversionStore(state => state.setIsConverting)
+  const setAllFilesConverted = useConversionStore(state => state.setAllFilesConverted)
   const updateFileStatus = useConversionStore(state => state.updateFileStatus)
   const setFileResult = useConversionStore(state => state.setFileResult)
   const replaceFileWithResult = useConversionStore(state => state.replaceFileWithResult)
@@ -67,10 +69,36 @@ export function App() {
   const addToast = useConversionStore(state => state.addToast)
 
   const hasFiles = files.length > 0
-  const canConvert = hasFiles && selectedTargetFormat && !isConverting
+  // Allow convert if: files exist AND (target format selected OR all files converted) AND not currently converting
+  const canConvert = hasFiles && (selectedTargetFormat || allFilesConverted) && !isConverting
 
   const handleConvert = async () => {
     if (!canConvert) return
+
+    // If all files were converted, user clicked "Convert again"
+    // Replace converted files with their results first
+    if (allFilesConverted) {
+      const convertedFiles = files.filter(f => f.status === 'completed' && f.result)
+      convertedFiles.forEach(f => replaceFileWithResult(f.id))
+
+      // Recalculate available targets based on new source formats
+      setTimeout(() => {
+        const currentFiles = useConversionStore.getState().files
+        const sourceFormats = currentFiles
+          .map(f => f.sourceFormat)
+          .filter((format): format is FormatId => format !== null)
+          .filter((format, index, arr) => arr.indexOf(format) === index)
+
+        const commonTargets = findCommonTargets(sourceFormats)
+        setAvailableTargets(commonTargets)
+        // Clear the selected target format so user needs to choose again
+        useConversionStore.getState().setSelectedTargetFormat(null)
+      }, 0)
+
+      // Reset the allFilesConverted flag so the TargetFormatSelector shows again
+      setAllFilesConverted(false)
+      return
+    }
 
     setIsConverting(true)
     announceToScreenReader('Conversion started')
@@ -107,6 +135,11 @@ export function App() {
         if (isAudioConversion) {
           // Use audio processing for audio conversions
           blob = await convertAudio(fileItem.file, targetFormat, { bitrate: 192 }, progress => {
+            console.log(`[App] Updating file ${fileItem.file.name}:`, {
+              id: fileItem.id,
+              percent: progress.percent,
+              message: progress.message,
+            })
             updateFileStatus(fileItem.id, 'processing', progress.percent, progress.message)
           })
         } else {
@@ -119,6 +152,10 @@ export function App() {
         // Detect actual format from blob (in case of fallback)
         const actualFormat = detectFormatFromMime(blob.type) || targetFormat
         const filename = generateOutputFilename(fileItem.file.name, actualFormat)
+
+        console.log(
+          `[App] Setting file result for ${fileItem.file.name} (${fileItem.id}) - marking as completed`
+        )
         setFileResult(fileItem.id, [{ blob, filename }])
 
         return { success: true, fileId: fileItem.id, fileName: fileItem.file.name }
@@ -146,24 +183,16 @@ export function App() {
 
     setIsConverting(false)
 
-    const successCount = files.filter(f => f.status === 'completed').length
+    // Get the fresh state after all updates
+    const currentFiles = useConversionStore.getState().files
+    const successCount = currentFiles.filter(f => f.status === 'completed').length
 
-    // Replace converted files with their results for sequential conversions
-    const convertedFiles = files.filter(f => f.status === 'completed' && f.result)
-    convertedFiles.forEach(f => replaceFileWithResult(f.id))
-
-    // Recalculate available targets based on new source formats
-    // We need to wait a bit for the state to update
-    setTimeout(() => {
-      const currentFiles = useConversionStore.getState().files
-      const sourceFormats = currentFiles
-        .map(f => f.sourceFormat)
-        .filter((format): format is FormatId => format !== null)
-        .filter((format, index, arr) => arr.indexOf(format) === index)
-
-      const commonTargets = findCommonTargets(sourceFormats)
-      setAvailableTargets(commonTargets)
-    }, 0)
+    // Mark all files as converted - this will keep the TargetFormatSelector hidden
+    // and change the Convert button to "Convert again"
+    const allCompleted = currentFiles.every(f => f.status === 'completed')
+    if (allCompleted) {
+      setAllFilesConverted(true)
+    }
 
     announceToScreenReader(`Conversion complete. ${successCount} file(s) converted.`)
   }
@@ -173,6 +202,13 @@ export function App() {
   const overallProgress = (() => {
     if (!isConverting || files.length === 0) return 0
 
+    const fileBreakdown = files.map(f => ({
+      name: f.file.name,
+      status: f.status,
+      progress: f.progress,
+      contributedProgress: f.status === 'completed' ? 100 : f.progress || 0,
+    }))
+
     const totalProgress = files.reduce((sum, file) => {
       // Completed files always contribute 100%
       if (file.status === 'completed') return sum + 100
@@ -180,7 +216,14 @@ export function App() {
       return sum + (file.progress || 0)
     }, 0)
 
-    return totalProgress / files.length
+    const result = totalProgress / files.length
+
+    console.log('[Overall Progress]', {
+      result: Math.round(result),
+      breakdown: fileBreakdown,
+    })
+
+    return result
   })()
 
   const showProgressBackground = isConverting && files.length > 2
@@ -198,7 +241,15 @@ export function App() {
             <FileList />
 
             {/* Target format selector with integrated options menu */}
-            <TargetFormatSelector disabled={isConverting} />
+            {/* Hide during conversion and when all files are converted */}
+            <div
+              className={`
+                transition-all duration-300 ease-in-out overflow-hidden
+                ${isConverting || allFilesConverted ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}
+              `}
+            >
+              <TargetFormatSelector disabled={isConverting} />
+            </div>
           </div>
         )}
       </main>
@@ -215,9 +266,11 @@ export function App() {
                 transition-all relative overflow-hidden
                 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
                 ${
-                  canConvert
-                    ? 'bg-brand-accent hover:bg-brand-accent-hover text-white'
-                    : 'bg-brand-bg-secondary text-brand-text-secondary cursor-not-allowed'
+                  !canConvert
+                    ? 'bg-brand-bg-secondary text-brand-text-secondary cursor-not-allowed'
+                    : allFilesConverted
+                      ? 'bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white'
+                      : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                 }
               `}
             >
@@ -264,7 +317,7 @@ export function App() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  Convert
+                  {allFilesConverted ? 'Convert again' : 'Convert'}
                 </span>
               )}
             </button>
