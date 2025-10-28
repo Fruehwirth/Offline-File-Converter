@@ -7,12 +7,7 @@
 import { useRef, useState } from 'react'
 import { useFileHandler } from '../features/conversion/useFileHandler'
 
-interface EmptyStateProps {
-  onSelectFiles?: () => void
-  onFileDrop?: (files: FileList) => void
-}
-
-export function EmptyState({ onSelectFiles, onFileDrop }: EmptyStateProps) {
+export function EmptyState() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const { handleFiles } = useFileHandler()

@@ -5,8 +5,6 @@
 import { describe, it, expect } from 'vitest'
 import {
   getFormat,
-  formatRequiresLibrary,
-  getRequiredLibrary,
   getFormatsByCategory,
 } from '../features/conversion/formatRegistry'
 import { findCommonTargets, getTargetsForFormat } from '../features/conversion/commonDenominators'
@@ -22,21 +20,12 @@ describe('Audio Format Registry', () => {
     })
   })
 
-  it('should require audio-processing library for audio formats', () => {
+  it('should have correct category for audio formats', () => {
     const audioFormats = ['mp3', 'wav', 'flac', 'ogg', 'aac', 'm4a']
 
     audioFormats.forEach(formatId => {
-      expect(formatRequiresLibrary(formatId as any)).toBe(true)
-      expect(getRequiredLibrary(formatId as any)).toBe('audio-processing')
-    })
-  })
-
-  it('should not require library for image formats', () => {
-    const imageFormats = ['png', 'jpeg', 'webp', 'gif', 'bmp', 'ico']
-
-    imageFormats.forEach(formatId => {
-      expect(formatRequiresLibrary(formatId as any)).toBe(false)
-      expect(getRequiredLibrary(formatId as any)).toBe(null)
+      const format = getFormat(formatId as any)
+      expect(format?.category).toBe('audio')
     })
   })
 

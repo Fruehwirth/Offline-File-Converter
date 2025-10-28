@@ -46,7 +46,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          icojs: ['icojs'],
           jszip: ['jszip'],
           lamejs: ['@breezystack/lamejs'],
           ffmpeg: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],

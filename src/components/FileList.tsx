@@ -198,7 +198,6 @@ function FileThumbnail({ file }: { file: File }) {
 
 export function FileList() {
   const files = useConversionStore(state => state.files)
-  const removeFile = useConversionStore(state => state.removeFile)
   const clearFiles = useConversionStore(state => state.clearFiles)
   const isConverting = useConversionStore(state => state.isConverting)
   const addToast = useConversionStore(state => state.addToast)
@@ -208,16 +207,6 @@ export function FileList() {
 
   if (files.length === 0) {
     return null
-  }
-
-  const handleDownload = (fileId: string) => {
-    const file = files.find(f => f.id === fileId)
-    if (!file?.result) return
-
-    // Download each result
-    file.result.forEach(({ blob, filename }) => {
-      downloadBlob(blob, filename)
-    })
   }
 
   const handleDownloadAll = async () => {

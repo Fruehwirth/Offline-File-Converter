@@ -60,7 +60,7 @@ export function base64ToBlob(base64: string, type = 'image/png'): Blob {
     byteArrays.push(new Uint8Array(byteNumbers))
   }
 
-  return new Blob(byteArrays, { type })
+  return new Blob(byteArrays as BlobPart[], { type })
 }
 
 /**

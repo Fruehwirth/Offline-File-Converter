@@ -73,12 +73,12 @@ export function useFileHandler() {
 
     // Add failed files to store with error status
     if (failedFiles.length > 0) {
-      addFiles(failedFiles.map(({ file, sourceFormat, error }) => ({ file, sourceFormat })))
+      addFiles(failedFiles.map(({ file, sourceFormat }) => ({ file, sourceFormat })))
 
       // Mark files as error immediately
       setTimeout(() => {
         const updateFileStatus = useConversionStore.getState().updateFileStatus
-        filesWithFormats.forEach(({ file, error }, index) => {
+        filesWithFormats.forEach(({ file, error }) => {
           if (error) {
             const fileItem = useConversionStore.getState().files.find(f => f.file === file)
             if (fileItem) {

@@ -3,7 +3,6 @@
  * Displays temporary messages to the user
  */
 
-import { useEffect } from 'react'
 import { useConversionStore } from '../features/state/useConversionStore'
 
 const ICONS = {

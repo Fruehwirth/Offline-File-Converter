@@ -53,7 +53,6 @@ export function installNetworkGuards() {
   }) as typeof fetch
 
   // Guard XMLHttpRequest
-  const OriginalXHR = window.XMLHttpRequest
   window.XMLHttpRequest = class BlockedXHR {
     open(...args: unknown[]) {
       console.error('Blocked XMLHttpRequest:', args)
