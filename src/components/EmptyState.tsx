@@ -94,7 +94,7 @@ export function EmptyState() {
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold text-brand-text mb-2">Convert files locally</h2>
+        <h2 className="text-2xl font-bold text-brand-text mb-2">Convert any files locally</h2>
 
         <p className="text-base text-brand-text-secondary mb-6 max-w-md">
           Drag & drop any files here or click to select.

@@ -1,0 +1,8 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Placeholder: Ersetzen Sie dieses Icon mit Ihrem eigenen Design -->
+  <rect width="48" height="48" rx="8" fill="#4B5563"/>
+  <rect x="12" y="14" width="24" height="20" rx="2" stroke="white" stroke-width="2"/>
+  <circle cx="19" cy="21" r="2" fill="white"/>
+  <path d="M12 28l6-6 4 4 6-6 8 8v6a2 2 0 01-2 2H14a2 2 0 01-2-2v-6z" fill="white"/>
+</svg>
+

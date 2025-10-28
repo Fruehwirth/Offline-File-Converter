@@ -1,0 +1,10 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Placeholder: Ersetzen Sie dieses Icon mit Ihrem eigenen Design -->
+  <rect width="48" height="48" rx="8" fill="#4B5563"/>
+  <path d="M16 12h10l6 6v18a2 2 0 01-2 2H16a2 2 0 01-2-2V14a2 2 0 012-2z" stroke="white" stroke-width="2"/>
+  <path d="M26 12v6h6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="20" y1="24" x2="28" y2="24" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="28" x2="28" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="32" x2="24" y2="32" stroke="white" stroke-width="2" stroke-linecap="round"/>
+</svg>
+

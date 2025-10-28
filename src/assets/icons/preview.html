@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Icon Vorschau - Offline File Converter</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #1a202c;
+      }
+
+      .subtitle {
+        color: #718096;
+        font-size: 16px;
+        margin-bottom: 40px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 32px;
+        margin-top: 32px;
+      }
+
+      .icon-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 24px;
+        border-radius: 12px;
+        background: #f7fafc;
+        border: 2px solid #e2e8f0;
+        transition: all 0.2s;
+      }
+
+      .icon-card:hover {
+        border-color: #667eea;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+      }
+
+      .icon-wrapper {
+        width: 96px;
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .icon-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .icon-info {
+        text-align: center;
+      }
+
+      .icon-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #2d3748;
+        margin-bottom: 4px;
+      }
+
+      .icon-category {
+        font-size: 13px;
+        color: #718096;
+        margin-bottom: 8px;
+      }
+
+      .icon-mimetypes {
+        font-size: 11px;
+        color: #a0aec0;
+        font-family: 'Monaco', 'Courier New', monospace;
+        background: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+
+      .instructions {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 32px;
+      }
+
+      .instructions h2 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 8px;
+      }
+
+      .instructions p {
+        color: #92400e;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #fef3c7;
+        color: #92400e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 Dateiformat-Icons</h1>
+      <p class="subtitle">Übersicht aller verfügbaren Icons für die Offline File Converter App</p>
+
+      <div class="instructions">
+        <h2>⚠️ Placeholder Icons</h2>
+        <p>
+          Alle unten gezeigten Icons sind <strong>Placeholder</strong>. Öffnen Sie die
+          entsprechenden .svg-Dateien in diesem Ordner und ersetzen Sie sie mit Ihren eigenen
+          Designs. Behalten Sie dabei die Struktur bei: 48x48px, dunkelgrauer Hintergrund (#4B5563),
+          8px Border Radius.
+        </p>
+      </div>
+
+      <div class="grid">
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="audio.svg" alt="Audio Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">Audio</div>
+            <div class="icon-category">Musik & Audio</div>
+            <div class="icon-mimetypes">audio/*</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="video.svg" alt="Video Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">Video</div>
+            <div class="icon-category">Videos</div>
+            <div class="icon-mimetypes">video/*</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="image.svg" alt="Image Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">Image</div>
+            <div class="icon-category">Bilder (Fallback)</div>
+            <div class="icon-mimetypes">image/*</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="archive.svg" alt="Archive Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">Archive</div>
+            <div class="icon-category">ZIP, RAR, 7Z, etc.</div>
+            <div class="icon-mimetypes">*zip*, *rar*, *7z*</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="document.svg" alt="Document Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">Document</div>
+            <div class="icon-category">PDF, DOCX, etc.</div>
+            <div class="icon-mimetypes">*pdf*, *document*</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+
+        <div class="icon-card">
+          <div class="icon-wrapper">
+            <img src="file.svg" alt="File Icon" />
+          </div>
+          <div class="icon-info">
+            <div class="icon-name">File</div>
+            <div class="icon-category">Generischer Fallback</div>
+            <div class="icon-mimetypes">Alle anderen</div>
+            <div class="status">Placeholder</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

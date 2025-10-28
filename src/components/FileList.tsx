@@ -10,6 +10,8 @@ import { downloadBlob } from '../features/conversion/download'
 import { DropZone } from './DropZone'
 import { useEffect, useState, useRef } from 'react'
 import { AnimatedFilename } from './AnimatedFilename'
+import { FileTypeIcon } from './FileTypeIcon'
+import { AudioPreviewIcon } from './AudioPreviewIcon'
 
 /**
  * Custom hook for smooth progress animation
@@ -101,40 +103,11 @@ function FileThumbnail({ file }: { file: File }) {
   const isAudio = file.type.startsWith('audio/')
 
   if (hasError || (!isImage && !isVideo)) {
-    // Show audio icon for audio files, picture icon for others
+    // Show file type icon with app-like styling
+    // Use AudioPreviewIcon for audio files
     return (
-      <div className="w-full h-full flex items-center justify-center bg-brand-accent/10">
-        {isAudio ? (
-          <svg
-            className="w-6 h-6 text-brand-accent"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="w-6 h-6 text-brand-accent"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-        )}
+      <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden">
+        {isAudio ? <AudioPreviewIcon file={file} /> : <FileTypeIcon file={file} />}
       </div>
     )
   }

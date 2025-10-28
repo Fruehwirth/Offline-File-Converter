@@ -8,9 +8,12 @@ import { FORMATS, type FormatId } from './formatRegistry'
 /**
  * Check if buffer matches a format signature
  */
-function matchesSignature(buffer: ArrayBuffer, signature: { offset: number; bytes: number[] }): boolean {
+function matchesSignature(
+  buffer: ArrayBuffer,
+  signature: { offset: number; bytes: number[] }
+): boolean {
   const view = new Uint8Array(buffer)
-  
+
   // Check if buffer is large enough
   if (view.length < signature.offset + signature.bytes.length) {
     return false
@@ -45,10 +48,10 @@ export function detectFormatFromBuffer(buffer: ArrayBuffer): FormatId | null {
  */
 function detectFormatFromExtension(filename: string): FormatId | null {
   const ext = filename.split('.').pop()?.toLowerCase()
-  
+
   if (ext === 'png') return 'png'
   if (ext === 'ico') return 'ico'
-  
+
   return null
 }
 
@@ -57,13 +60,13 @@ function detectFormatFromExtension(filename: string): FormatId | null {
  */
 function detectFormatFromMime(mimeType: string): FormatId | null {
   const normalized = mimeType.toLowerCase()
-  
+
   for (const format of FORMATS) {
     if (format.mime.some(mime => mime.toLowerCase() === normalized)) {
       return format.id
     }
   }
-  
+
   return null
 }
 
@@ -78,7 +81,7 @@ export async function detectFormat(file: File): Promise<{
   try {
     const buffer = await file.arrayBuffer()
     const magicFormat = detectFormatFromBuffer(buffer)
-    
+
     if (magicFormat) {
       return { format: magicFormat, confidence: 'high' }
     }
@@ -111,14 +114,13 @@ export async function detectFormat(file: File): Promise<{
  */
 export async function detectFormats(files: File[]): Promise<Map<File, FormatId | null>> {
   const results = new Map<File, FormatId | null>()
-  
+
   await Promise.all(
     files.map(async file => {
       const { format } = await detectFormat(file)
       results.set(file, format)
     })
   )
-  
+
   return results
 }
-
