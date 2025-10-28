@@ -6,7 +6,7 @@ I've configured everything needed for GitHub Pages deployment. Here's what chang
 
 ### Files Modified
 
-- ✅ `vite.config.ts` - Added base path `/offline-file-converter/`
+- ✅ `vite.config.ts` - Added base path `/Offline-File-Converter/`
 - ✅ `src/main.tsx` - Added Service Worker registration
 - ✅ `index.html` - Updated CSP for Service Worker support
 - ✅ `src/features/conversion/audioProcessing.ts` - Fixed FFmpeg paths for base URL
@@ -40,7 +40,7 @@ git push origin main
 
 1. Go to: https://github.com/fruehwirth/offline-file-converter/actions
 2. Watch the workflow run (takes ~2-3 minutes first time)
-3. Once complete, visit: **https://fruehwirth.github.io/offline-file-converter/**
+3. Once complete, visit: **https://fruehwirth.github.io/Offline-File-Converter/**
 
 ---
 
@@ -137,6 +137,6 @@ You're ready to deploy. Just:
 3. Wait 2 minutes
 4. Visit your site!
 
-**Your site will be at**: https://fruehwirth.github.io/offline-file-converter/
+**Your site will be at**: https://fruehwirth.github.io/Offline-File-Converter/
 
 Good luck! 🚀

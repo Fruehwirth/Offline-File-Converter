@@ -6,7 +6,7 @@ This guide explains how to deploy your Offline File Converter to GitHub Pages.
 
 All necessary files have been configured for GitHub Pages deployment:
 
-1. ✅ **Base path** set in `vite.config.ts` to `/offline-file-converter/`
+1. ✅ **Base path** set in `vite.config.ts` to `/Offline-File-Converter/`
 2. ✅ **Service Worker** (`public/sw.js`) to enable COOP/COEP headers for FFmpeg.wasm
 3. ✅ **GitHub Actions workflow** (`.github/workflows/deploy.yml`) for automatic deployment
 4. ✅ **CSP updated** to allow Service Worker
@@ -41,7 +41,7 @@ git push origin main
 2. Watch the "Deploy to GitHub Pages" workflow run
 3. Once complete (✅ green checkmark), your site will be live at:
 
-   **https://fruehwirth.github.io/offline-file-converter/**
+   **https://fruehwirth.github.io/Offline-File-Converter/**
 
 ⏱️ First deployment takes ~2-3 minutes.
 
@@ -105,7 +105,7 @@ Then visit http://localhost:4173 and verify:
 
 **Solution**:
 
-- Verify `base: '/offline-file-converter/'` in `vite.config.ts`
+- Verify `base: '/Offline-File-Converter/'` in `vite.config.ts`
 - Check that `.nojekyll` exists in `public/` folder
 - Clear browser cache and hard refresh
 
@@ -140,7 +140,7 @@ Then visit http://localhost:4173 and verify:
   - No Service Worker
 
 - **Production** (`npm run build`):
-  - Base URL: `/offline-file-converter/`
+  - Base URL: `/Offline-File-Converter/`
   - COOP/COEP via Service Worker
   - Service Worker registered
 
@@ -170,7 +170,7 @@ GitHub Actions will automatically rebuild and redeploy! 🚀
 ## 📊 Monitoring
 
 - **Deployment status**: GitHub Actions tab
-- **Live site**: https://fruehwirth.github.io/offline-file-converter/
+- **Live site**: https://fruehwirth.github.io/Offline-File-Converter/
 - **Build logs**: Click on workflow run → build/deploy jobs
 
 ---
@@ -189,7 +189,7 @@ GitHub Actions will automatically rebuild and redeploy! 🚀
 
 After deployment, verify:
 
-- [ ] Site loads at https://fruehwirth.github.io/offline-file-converter/
+- [ ] Site loads at https://fruehwirth.github.io/Offline-File-Converter/
 - [ ] Service Worker registered (DevTools → Application → Service Workers)
 - [ ] Can drop files and see them in file list
 - [ ] Image conversions work (PNG → ICO, etc.)
