@@ -238,7 +238,7 @@ export function App() {
       <Header />
 
       <main
-        className={`flex-1 container mx-auto px-4 py-8 ${!hasFiles ? 'md:flex md:items-center' : ''}`}
+        className={`${!hasFiles ? 'md:flex-1 md:flex md:items-center' : 'flex-1'} container mx-auto px-4 ${!hasFiles ? 'py-4 md:py-8' : 'py-8'}`}
       >
         {!hasFiles ? (
           <EmptyState />
