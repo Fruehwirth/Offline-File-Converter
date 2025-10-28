@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,7 @@
     <!-- In production: Stays strict with connect-src 'none' -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; connect-src 'self' blob: data:; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; script-src-elem 'self' blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; manifest-src 'self';"
+      content="default-src 'self'; connect-src 'self' blob: data:; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' blob:; script-src-elem 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; manifest-src 'self';"
     />
 
     <!-- Privacy and security -->
@@ -27,8 +27,22 @@
     <title>File Converter - 100% Local & Private</title>
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function() {
+        const stored = localStorage.getItem('app-theme');
+        if (stored === 'light' || stored === 'dark') {
+          document.documentElement.setAttribute('data-theme', stored);
+        } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
-  <body data-theme="dark">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

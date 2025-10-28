@@ -456,18 +456,14 @@ function FileListItem({
           }}
         />
       )}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 relative z-10">
+      <div className="flex items-center gap-3 relative z-10 min-w-0">
         {/* Thumbnail Preview */}
         <div
           className={`
           flex-shrink-0 flex items-center justify-center overflow-hidden rounded-lg relative
-          ${
-            hasError
-              ? 'w-12 h-12 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/30'
-              : 'w-12 h-12 sm:w-20 sm:h-20 bg-brand-accent/5'
-          }
+          ${hasError ? 'w-12 h-12 bg-red-100 dark:bg-red-900/30' : 'w-12 h-12 bg-brand-accent/5'}
         `}
-          style={{ maxWidth: '125px', maxHeight: '125px' }}
+          style={{ maxWidth: '80px', maxHeight: '80px' }}
         >
           {hasError ? (
             <svg
@@ -492,14 +488,16 @@ function FileListItem({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <AnimatedFilename
-                originalName={file.file.name}
-                convertedName={file.result?.[0]?.filename}
-                isConverted={file.status === 'completed'}
-              />
-              <div className="flex items-center gap-2 mt-1 text-xs text-brand-text-secondary">
-                <span>{formatBytes(file.file.size)}</span>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="overflow-hidden">
+                <AnimatedFilename
+                  originalName={file.file.name}
+                  convertedName={file.result?.[0]?.filename}
+                  isConverted={file.status === 'completed'}
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-1 text-xs text-brand-text-secondary flex-wrap">
+                <span className="whitespace-nowrap">{formatBytes(file.file.size)}</span>
                 {file.sourceFormat && (
                   <>
                     <span>•</span>
@@ -515,32 +513,32 @@ function FileListItem({
 
             {/* Status Message - All States */}
             {file.status === 'queued' && isConverting && (
-              <p className="text-xs text-brand-text-secondary font-medium flex items-center gap-1">
+              <p className="text-xs text-brand-text-secondary font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
                 Queued...
               </p>
             )}
             {file.status === 'processing' && (
-              <p className="text-xs text-brand-accent font-medium flex items-center gap-1">
+              <p className="text-xs text-brand-accent font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                 Converting... {Math.round(displayProgress)}%
               </p>
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {file.status === 'completed' && file.result && (
                 <button
                   onClick={handleDownload}
                   className="
-                    p-3 rounded
+                    p-2 rounded
                     text-brand-text-secondary hover:text-brand-success
                     transition-colors
                   "
                   aria-label="Download converted file"
                   title="Download"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -555,14 +553,14 @@ function FileListItem({
                 <button
                   onClick={() => removeFile(file.id)}
                   className="
-                    p-3 rounded
+                    p-2 rounded
                     text-brand-text-secondary hover:text-brand-error
                     transition-colors
                   "
                   aria-label="Remove file"
                   title="Remove"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"

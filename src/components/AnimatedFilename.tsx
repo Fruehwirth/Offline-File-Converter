@@ -50,12 +50,14 @@ export function AnimatedFilename({
   const displayExtension = isConverted ? converted.extension : original.extension
 
   return (
-    <p className="text-sm font-medium text-brand-text truncate">
-      <span>{isConverted ? converted.basename : original.basename}</span>
+    <p className="text-sm font-medium text-brand-text flex items-center min-w-0">
+      <span className="truncate flex-shrink min-w-0">
+        {isConverted ? converted.basename : original.basename}
+      </span>
       {displayExtension && (
         <>
-          <span>.</span>
-          <span className="inline-block relative" style={{ display: 'inline-block' }}>
+          <span className="flex-shrink-0">.</span>
+          <span className="inline-block relative flex-shrink-0">
             {isAnimating ? (
               <>
                 {/* Old extension falling down */}

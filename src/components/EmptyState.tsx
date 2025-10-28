@@ -70,7 +70,7 @@ export function EmptyState() {
           ref={inputRef}
           type="file"
           multiple
-          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/tiff,image/avif,image/heic,image/x-icon,audio/mpeg,audio/wav,audio/flac,audio/ogg,audio/aac,audio/mp4,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff,.tif,.avif,.heic,.ico,.mp3,.wav,.flac,.ogg,.aac,.m4a"
+          accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff,.tif,.avif,.heic,.ico,.mp3,.wav,.flac,.ogg,.aac,.m4a"
           className="sr-only"
           onChange={handleInputChange}
           aria-hidden="true"
