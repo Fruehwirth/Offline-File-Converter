@@ -4,7 +4,11 @@
  * Receives PCM data from main thread and encodes to target format
  */
 
-import lamejs from 'lamejs'
+// Import the ES module version of lamejs
+import { Mp3Encoder } from '@breezystack/lamejs'
+
+// Create a lamejs object that matches our existing interface
+const lamejs = { Mp3Encoder }
 
 export interface AudioConversionMessage {
   type: 'convert'
@@ -33,19 +37,15 @@ self.onmessage = async (event: MessageEvent<AudioConversionMessage>) => {
 
   if (type === 'convert') {
     try {
-      postProgress(10)
-
       // Validate input
       if (!channelData || channelData.length === 0) {
         throw new Error('No audio data provided')
       }
 
-      postProgress(20)
+      postProgress(0)
 
-      // Encode audio to target format
+      // Encode audio to target format (this will report its own progress 0-100)
       const outputBuffer = await encodeAudio(channelData, sampleRate, targetFormat, options)
-
-      postProgress(90)
 
       // Send success response
       self.postMessage({
@@ -85,11 +85,9 @@ async function encodeAudio(
 ): Promise<ArrayBuffer> {
   switch (targetFormat.toLowerCase()) {
     case 'wav':
-      postProgress(40)
       return encodeWAV(channelData, sampleRate)
 
     case 'mp3':
-      postProgress(40)
       return encodeMP3(channelData, sampleRate, options?.bitrate || 192)
 
     default:
@@ -105,6 +103,8 @@ function encodeWAV(channelData: Float32Array[], sampleRate: number): ArrayBuffer
   const numSamples = channelData[0].length
   const bitsPerSample = 16
   const bytesPerSample = bitsPerSample / 8
+
+  postProgress(10)
 
   // WAV file structure:
   // - RIFF header (12 bytes)
@@ -123,6 +123,8 @@ function encodeWAV(channelData: Float32Array[], sampleRate: number): ArrayBuffer
     }
   }
 
+  postProgress(20)
+
   // RIFF header
   writeString(0, 'RIFF')
   view.setUint32(4, fileSize - 8, true) // File size - 8
@@ -138,9 +140,13 @@ function encodeWAV(channelData: Float32Array[], sampleRate: number): ArrayBuffer
   view.setUint16(32, numChannels * bytesPerSample, true) // Block align
   view.setUint16(34, bitsPerSample, true) // Bits per sample
 
+  postProgress(40)
+
   // data chunk
   writeString(36, 'data')
   view.setUint32(40, dataSize, true) // Data size
+
+  postProgress(50)
 
   // Write audio data (interleaved)
   let offset = 44
@@ -152,9 +158,15 @@ function encodeWAV(channelData: Float32Array[], sampleRate: number): ArrayBuffer
       view.setInt16(offset, int16, true)
       offset += 2
     }
+
+    // Report progress periodically
+    if (i % 10000 === 0) {
+      const progress = 50 + Math.floor((i / numSamples) * 45)
+      postProgress(progress)
+    }
   }
 
-  postProgress(80)
+  postProgress(95)
   return buffer
 }
 
@@ -168,7 +180,7 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
   // Initialize MP3 encoder
   const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, bitrate)
 
-  postProgress(50)
+  postProgress(5)
 
   // Convert Float32Array to Int16Array for lamejs
   const left = new Int16Array(numSamples)
@@ -185,10 +197,10 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
     }
   }
 
-  postProgress(60)
+  postProgress(15)
 
   // Encode in chunks (lamejs processes 1152 samples at a time)
-  const mp3Data: Int8Array[] = []
+  const mp3Data: Uint8Array[] = []
   const chunkSize = 1152
 
   for (let i = 0; i < numSamples; i += chunkSize) {
@@ -203,8 +215,8 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
       mp3Data.push(mp3buf)
     }
 
-    // Update progress
-    const progress = 60 + Math.floor((i / numSamples) * 15)
+    // Update progress - map encoding to 15-90%
+    const progress = 15 + Math.floor((i / numSamples) * 75)
     postProgress(progress)
   }
 
@@ -214,7 +226,7 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
     mp3Data.push(mp3buf)
   }
 
-  postProgress(75)
+  postProgress(92)
 
   // Combine all MP3 chunks into a single ArrayBuffer
   const totalLength = mp3Data.reduce((acc, chunk) => acc + chunk.length, 0)
@@ -226,6 +238,6 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
     offset += chunk.length
   }
 
-  postProgress(85)
+  postProgress(98)
   return result.buffer
 }

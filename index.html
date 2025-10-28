@@ -1,28 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <!-- Strict Content Security Policy -->
     <!-- In development: Vite transforms this to allow localhost WebSocket for HMR -->
     <!-- In production: Stays strict with connect-src 'none' -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; connect-src 'none'; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+      content="default-src 'self'; connect-src 'self' blob: data:; img-src 'self' blob: data:; media-src 'self' blob: data:; font-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; script-src-elem 'self' blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:;"
     />
-    
+
     <!-- Privacy and security -->
     <meta name="referrer" content="no-referrer" />
     <meta name="robots" content="noindex, nofollow" />
-    
+
     <!-- App metadata -->
-    <meta name="description" content="Privacy-first file converter. Convert files locally in your browser with no uploads or tracking." />
+    <meta
+      name="description"
+      content="Privacy-first file converter. Convert files locally in your browser with no uploads or tracking."
+    />
     <meta name="keywords" content="file converter, privacy, offline, local, PNG, ICO" />
     <meta name="theme-color" content="#0a0a0a" />
-    
+
     <title>File Converter - 100% Local & Private</title>
-    
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
   <body data-theme="dark">
@@ -30,4 +33,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

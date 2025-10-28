@@ -31,21 +31,19 @@ self.onmessage = async (event: MessageEvent<ImageConversionMessage>) => {
 
   if (type === 'convert') {
     try {
-      // Report progress
-      postProgress(10)
+      // Start at 0% - only show actual conversion progress
+      postProgress(0)
 
       // Convert ArrayBuffer to Blob
       const blob = new Blob([fileData], { type: `image/${sourceFormat}` })
-      postProgress(20)
 
       // Create ImageBitmap from blob
       const imageBitmap = await createImageBitmap(blob)
-      postProgress(40)
+      postProgress(20)
 
       // Determine dimensions
       const width = options?.width || imageBitmap.width
       const height = options?.height || imageBitmap.height
-      postProgress(50)
 
       // Create OffscreenCanvas
       const canvas = new OffscreenCanvas(width, height)
@@ -57,9 +55,9 @@ self.onmessage = async (event: MessageEvent<ImageConversionMessage>) => {
 
       // Draw image onto canvas
       ctx.drawImage(imageBitmap, 0, 0, width, height)
-      postProgress(70)
+      postProgress(40)
 
-      // Convert to target format
+      // Convert to target format (this is the actual conversion step)
       const outputMimeType = getMimeType(targetFormat)
       const quality = options?.quality ?? 0.92
 
@@ -68,7 +66,7 @@ self.onmessage = async (event: MessageEvent<ImageConversionMessage>) => {
         quality:
           outputMimeType.includes('jpeg') || outputMimeType.includes('webp') ? quality : undefined,
       })
-      postProgress(90)
+      postProgress(80)
 
       // Convert blob to ArrayBuffer
       const outputBuffer = await outputBlob.arrayBuffer()
@@ -117,4 +115,3 @@ function getMimeType(format: string): string {
 
   return mimeMap[format.toLowerCase()] || 'image/png'
 }
-

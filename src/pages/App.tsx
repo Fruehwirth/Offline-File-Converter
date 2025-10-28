@@ -18,6 +18,7 @@ import { downloadFiles } from '../features/conversion/download'
 import { announceToScreenReader } from '../utils/accessibility'
 import { getFormat, type FormatId } from '../features/conversion/formatRegistry'
 import { findCommonTargets } from '../features/conversion/commonDenominators'
+import { getTranscodingWarning } from '../features/conversion/audioFormatUtils'
 
 /**
  * Detect format from MIME type (for handling fallback conversions)
@@ -82,12 +83,42 @@ export function App() {
 
     const filesToConvert = files.filter(f => f.sourceFormat && f.status !== 'completed')
 
-    for (const fileItem of filesToConvert) {
+    // Show transcoding warning if applicable
+    if (selectedTargetFormat) {
+      const sourceFormats = filesToConvert
+        .map(f => f.sourceFormat)
+        .filter((format): format is FormatId => format !== null)
+
+      const warning = getTranscodingWarning(sourceFormats, selectedTargetFormat)
+      if (warning) {
+        addToast({
+          type: 'warning',
+          message: warning,
+          duration: 8000,
+        })
+      }
+    }
+
+    // Convert all files concurrently using Promise.allSettled
+    // This allows multiple conversions to run simultaneously
+    const conversionPromises = filesToConvert.map(async fileItem => {
       updateFileStatus(fileItem.id, 'processing', 0)
 
       try {
         const sourceFormat = fileItem.sourceFormat as FormatId
         const targetFormat = selectedTargetFormat as FormatId
+
+        // Check if file is already in target format - skip conversion if so
+        if (sourceFormat === targetFormat) {
+          // Pass through the original file without conversion
+          updateFileStatus(fileItem.id, 'processing', 100, 'Skipped (already in target format)')
+
+          const blob = new Blob([await fileItem.file.arrayBuffer()], { type: fileItem.file.type })
+          const filename = fileItem.file.name
+          setFileResult(fileItem.id, [{ blob, filename }])
+
+          return { success: true, fileId: fileItem.id, fileName: fileItem.file.name, skipped: true }
+        }
 
         // Determine if this is an image or audio conversion
         const sourceFormatInfo = getFormat(sourceFormat)
@@ -111,6 +142,8 @@ export function App() {
         const actualFormat = detectFormatFromMime(blob.type) || targetFormat
         const filename = generateOutputFilename(fileItem.file.name, actualFormat)
         setFileResult(fileItem.id, [{ blob, filename }])
+
+        return { success: true, fileId: fileItem.id, fileName: fileItem.file.name }
       } catch (error) {
         // Log full error details to console
         console.error(`[App] Conversion failed for ${fileItem.file.name}:`, error)
@@ -125,8 +158,13 @@ export function App() {
           type: 'error',
           message: `Failed to convert ${fileItem.file.name}: ${message}`,
         })
+
+        return { success: false, fileId: fileItem.id, fileName: fileItem.file.name }
       }
-    }
+    })
+
+    // Wait for all conversions to complete
+    await Promise.allSettled(conversionPromises)
 
     setIsConverting(false)
 

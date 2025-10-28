@@ -1,9 +1,9 @@
 /**
  * Audio Processing Conversion
- * Handles audio decoding and format conversion using multiple strategies:
+ * Handles audio decoding and format conversion using efficient encoders:
  * - MP3: lamejs encoder (worker)
  * - WAV: Native PCM encoder (worker)
- * - OGG/FLAC/AAC/M4A: MediaRecorder API (main thread)
+ * - OGG/FLAC/AAC/M4A: FFmpeg WASM (fast, non-realtime encoding)
  */
 
 import type { FormatId } from './formatRegistry'
@@ -12,6 +12,9 @@ import type {
   AudioConversionMessage,
   AudioConversionResponse,
 } from '../workers/audioProcessing.worker'
+// @ts-ignore - FFmpeg 0.11 uses CommonJS
+import * as FFmpegModule from '@ffmpeg/ffmpeg'
+const { createFFmpeg, fetchFile } = FFmpegModule as any
 
 export interface AudioProcessingOptions {
   bitrate?: number // kbps for lossy formats (default: 192)
@@ -24,6 +27,44 @@ export interface ConversionProgress {
   message?: string
 }
 
+// Singleton FFmpeg instance for reuse
+let ffmpegInstance: any = null
+let ffmpegLoading: Promise<any> | null = null
+
+/**
+ * Get or initialize FFmpeg instance (singleton pattern)
+ * Using FFmpeg 0.11.x which is more stable
+ */
+async function getFFmpeg(): Promise<any> {
+  if (ffmpegInstance) {
+    return ffmpegInstance
+  }
+
+  if (ffmpegLoading) {
+    return ffmpegLoading
+  }
+
+  ffmpegLoading = (async () => {
+    console.log('[FFmpeg 0.11] Starting initialization...')
+
+    const ffmpeg = createFFmpeg({
+      log: true,
+      corePath: '/ffmpeg-core.js',
+      workerPath: '/ffmpeg-core.worker.js',
+    })
+
+    console.log('[FFmpeg 0.11] Loading core...')
+    await ffmpeg.load()
+    console.log('[FFmpeg 0.11] Successfully loaded!')
+
+    ffmpegInstance = ffmpeg
+    ffmpegLoading = null
+    return ffmpeg
+  })()
+
+  return ffmpegLoading
+}
+
 /**
  * Convert audio using the appropriate method based on target format
  */
@@ -33,13 +74,13 @@ export async function convertAudio(
   options: AudioProcessingOptions = {},
   onProgress?: (progress: ConversionProgress) => void
 ): Promise<Blob> {
-  // For MP3 and WAV, use worker-based encoding
+  // For MP3 and WAV, use worker-based encoding (already fast)
   if (targetFormat === 'mp3' || targetFormat === 'wav') {
     return convertAudioWithWorker(file, targetFormat, options, onProgress)
   }
 
-  // For OGG, FLAC, AAC, M4A, use MediaRecorder API
-  return convertAudioWithMediaRecorder(file, targetFormat, options, onProgress)
+  // For OGG, FLAC, AAC, M4A, use FFmpeg 0.11 WASM
+  return convertAudioWithFFmpeg(file, targetFormat, options, onProgress)
 }
 
 /**
@@ -52,7 +93,8 @@ async function convertAudioWithWorker(
   onProgress?: (progress: ConversionProgress) => void
 ): Promise<Blob> {
   // Decode audio in main thread (AudioContext only works here, not in workers)
-  onProgress?.({ percent: 10, message: 'Decoding audio...' })
+  // Start at 0% since we only want to show encoding progress
+  onProgress?.({ percent: 0, message: 'Preparing audio...' })
 
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
   const fileData = await file.arrayBuffer()
@@ -67,15 +109,13 @@ async function convertAudioWithWorker(
     )
   }
 
-  onProgress?.({ percent: 30, message: 'Extracting audio data...' })
-
   // Extract channel data (PCM)
   const channelData: Float32Array[] = []
   for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
     channelData.push(audioBuffer.getChannelData(i))
   }
 
-  onProgress?.({ percent: 40, message: 'Encoding audio...' })
+  onProgress?.({ percent: 0, message: 'Encoding audio...' })
 
   // Send to worker for encoding
   return new Promise((resolve, reject) => {
@@ -85,9 +125,8 @@ async function convertAudioWithWorker(
       const { type, data, error, progress } = event.data
 
       if (type === 'progress' && progress !== undefined) {
-        // Map worker progress (0-100) to overall progress (40-90)
-        const mappedProgress = 40 + Math.floor((progress / 100) * 50)
-        onProgress?.({ percent: mappedProgress, message: 'Encoding audio...' })
+        // Map worker progress (0-100) directly to UI progress (0-100)
+        onProgress?.({ percent: progress, message: 'Encoding audio...' })
       } else if (type === 'success' && data) {
         const mimeType = getMimeType(targetFormat)
         const blob = new Blob([data], { type: mimeType })
@@ -124,164 +163,104 @@ async function convertAudioWithWorker(
 }
 
 /**
- * Convert audio using MediaRecorder API (for OGG, FLAC, AAC, M4A)
- * This uses the browser's native audio encoding capabilities with intelligent fallback
+ * Convert audio using FFmpeg 0.11 WASM (for OGG, FLAC, AAC, M4A)
  */
-async function convertAudioWithMediaRecorder(
+async function convertAudioWithFFmpeg(
   file: File,
   targetFormat: FormatId,
   options: AudioProcessingOptions = {},
   onProgress?: (progress: ConversionProgress) => void
 ): Promise<Blob> {
-  onProgress?.({ percent: 10, message: 'Decoding audio...' })
+  console.log('[convertAudioWithFFmpeg] Starting conversion:', file.name, 'to', targetFormat)
+  onProgress?.({ percent: 0, message: 'Loading FFmpeg...' })
 
-  // Decode audio
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-  const fileData = await file.arrayBuffer()
+  const inputFileName = `input.${file.name.split('.').pop() || 'audio'}`
+  const outputFileName = `output.${targetFormat}`
 
-  let audioBuffer: AudioBuffer
   try {
-    audioBuffer = await audioContext.decodeAudioData(fileData)
+    const ffmpeg = await getFFmpeg()
+    console.log('[convertAudioWithFFmpeg] FFmpeg 0.11 loaded')
+
+    onProgress?.({ percent: 10, message: 'Preparing audio...' })
+
+    // Write input file to FFmpeg's virtual filesystem (0.11 API)
+    ffmpeg.FS('writeFile', inputFileName, await fetchFile(file))
+    console.log('[convertAudioWithFFmpeg] Input file written')
+
+    onProgress?.({ percent: 20, message: 'Encoding audio...' })
+
+    // Build FFmpeg command
+    const ffmpegArgs = buildFFmpegArgs(targetFormat, inputFileName, outputFileName, options)
+    console.log('[convertAudioWithFFmpeg] Running:', ffmpegArgs.join(' '))
+
+    // Run FFmpeg (0.11 API)
+    await ffmpeg.run(...ffmpegArgs)
+    console.log('[convertAudioWithFFmpeg] Conversion complete')
+
+    onProgress?.({ percent: 90, message: 'Reading output...' })
+
+    // Read output file (0.11 API)
+    const data = ffmpeg.FS('readFile', outputFileName)
+
+    // Clean up
+    try {
+      ffmpeg.FS('unlink', inputFileName)
+      ffmpeg.FS('unlink', outputFileName)
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+
+    // Convert to Blob
+    const mimeType = getMimeType(targetFormat)
+    const blob = new Blob([data.buffer], { type: mimeType })
+
+    onProgress?.({ percent: 100, message: 'Complete!' })
+    console.log('[convertAudioWithFFmpeg] Success! Size:', blob.size)
+    return blob
   } catch (error) {
-    await audioContext.close()
+    console.error('[convertAudioWithFFmpeg] Error:', error)
     throw new Error(
-      `Failed to decode audio: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `FFmpeg conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     )
   }
+}
 
-  onProgress?.({ percent: 30, message: 'Preparing audio stream...' })
+/**
+ * Build FFmpeg command arguments based on target format
+ */
+function buildFFmpegArgs(
+  targetFormat: FormatId,
+  inputFile: string,
+  outputFile: string,
+  options: AudioProcessingOptions
+): string[] {
+  const bitrate = options.bitrate || 192
+  const args = ['-i', inputFile]
 
-  // Try to find a supported MIME type for the target format
-  const mimeTypes = getMediaRecorderMimeTypes(targetFormat)
-  let supportedMimeType: string | null = null
-
-  for (const mimeType of mimeTypes) {
-    if (MediaRecorder.isTypeSupported(mimeType)) {
-      supportedMimeType = mimeType
+  switch (targetFormat) {
+    case 'ogg':
+      // OGG Vorbis
+      args.push('-c:a', 'libvorbis', '-q:a', '5') // Quality 5 ≈ 160 kbps
       break
-    }
+
+    case 'flac':
+      // FLAC (lossless)
+      args.push('-c:a', 'flac', '-compression_level', '5')
+      break
+
+    case 'aac':
+    case 'm4a':
+      // AAC
+      args.push('-c:a', 'aac', '-b:a', `${bitrate}k`)
+      break
+
+    default:
+      // Generic encoding
+      args.push('-b:a', `${bitrate}k`)
   }
 
-  // If no supported MIME type found, fall back to MP3 or WAV
-  if (!supportedMimeType) {
-    await audioContext.close()
-
-    // Fall back to WAV for FLAC (lossless), MP3 for others (lossy)
-    const fallbackFormat = targetFormat === 'flac' ? 'wav' : 'mp3'
-    const fallbackLabel = fallbackFormat.toUpperCase()
-
-    console.warn(
-      `Format ${targetFormat.toUpperCase()} not supported by browser, using ${fallbackLabel} instead`
-    )
-
-    // Show message about fallback
-    onProgress?.({
-      percent: 35,
-      message: `${targetFormat.toUpperCase()} not supported, converting to ${fallbackLabel}...`,
-    })
-
-    return convertAudioWithWorker(file, fallbackFormat as FormatId, options, onProgress)
-  }
-
-  onProgress?.({ percent: 40, message: 'Encoding audio...' })
-
-  // Create a MediaStream from the decoded audio
-  const destination = audioContext.createMediaStreamDestination()
-  const source = audioContext.createBufferSource()
-  source.buffer = audioBuffer
-  source.connect(destination)
-
-  // Record the audio stream
-  const chunks: Blob[] = []
-  const recorder = new MediaRecorder(destination.stream, {
-    mimeType: supportedMimeType,
-    audioBitsPerSecond: (options.bitrate || 192) * 1000,
-  })
-
-  return new Promise((resolve, reject) => {
-    let hasResolved = false
-    let progressInterval: number | null = null
-
-    recorder.ondataavailable = event => {
-      if (event.data.size > 0) {
-        chunks.push(event.data)
-      }
-    }
-
-    recorder.onstop = async () => {
-      if (hasResolved) return
-      hasResolved = true
-
-      if (progressInterval) clearInterval(progressInterval)
-      await audioContext.close()
-
-      if (chunks.length === 0) {
-        reject(new Error('No audio data was recorded'))
-        return
-      }
-
-      const blob = new Blob(chunks, { type: supportedMimeType })
-      onProgress?.({ percent: 100, message: 'Complete!' })
-      resolve(blob)
-    }
-
-    recorder.onerror = async event => {
-      if (hasResolved) return
-      hasResolved = true
-
-      if (progressInterval) clearInterval(progressInterval)
-      await audioContext.close()
-      reject(new Error(`Recording failed: ${(event as any).error?.message || 'Unknown error'}`))
-    }
-
-    // Fallback timeout in case something goes wrong
-    const duration = audioBuffer.duration
-    const safetyTimeout = setTimeout(
-      () => {
-        if (!hasResolved && recorder.state !== 'inactive') {
-          console.warn('MediaRecorder safety timeout reached, forcing stop')
-          recorder.stop()
-        }
-      },
-      (duration + 3) * 1000
-    ) // Duration + 3 seconds buffer
-
-    // Start recording
-    recorder.start()
-
-    // Ensure AudioContext is running
-    if (audioContext.state === 'suspended') {
-      audioContext.resume()
-    }
-
-    // Start playback (this feeds data to the recorder)
-    source.start(0)
-
-    // Simulate progress based on audio duration
-    const startTime = audioContext.currentTime
-    progressInterval = setInterval(() => {
-      if (!hasResolved) {
-        const elapsed = audioContext.currentTime - startTime
-        const progress = Math.min(85, 40 + Math.floor((elapsed / duration) * 45))
-        onProgress?.({ percent: progress, message: 'Encoding audio...' })
-      }
-    }, 200)
-
-    // Stop recording when playback ends
-    source.onended = () => {
-      // Add a small delay to ensure all data is captured
-      setTimeout(() => {
-        if (!hasResolved) {
-          if (progressInterval) clearInterval(progressInterval)
-          onProgress?.({ percent: 90, message: 'Finalizing...' })
-          if (recorder.state !== 'inactive') {
-            recorder.stop()
-          }
-          clearTimeout(safetyTimeout)
-        }
-      }, 200)
-    }
-  })
+  args.push(outputFile)
+  return args
 }
 
 /**
@@ -298,24 +277,6 @@ function getMimeType(format: FormatId): string {
   }
 
   return mimeMap[format] || 'audio/mpeg'
-}
-
-/**
- * Get MediaRecorder-compatible MIME types in order of preference
- * Returns an array of MIME types to try
- */
-function getMediaRecorderMimeTypes(format: FormatId): string[] {
-  const mimeTypesMap: Record<string, string[]> = {
-    ogg: ['audio/ogg; codecs=opus', 'audio/ogg', 'audio/webm; codecs=opus', 'audio/webm'],
-    flac: [
-      'audio/flac',
-      'audio/wav', // Fallback to WAV
-    ],
-    aac: ['audio/mp4; codecs=mp4a.40.2', 'audio/mp4', 'audio/aac'],
-    m4a: ['audio/mp4; codecs=mp4a.40.2', 'audio/mp4', 'audio/aac'],
-  }
-
-  return mimeTypesMap[format] || ['audio/webm']
 }
 
 /**

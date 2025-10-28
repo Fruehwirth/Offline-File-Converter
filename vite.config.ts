@@ -16,27 +16,46 @@ export default defineConfig({
         }
         // In production, keep strict CSP
         return html
-      }
-    }
+      },
+    },
+    {
+      name: 'configure-server',
+      configureServer(server) {
+        server.middlewares.use((_req, res, next) => {
+          // Required for SharedArrayBuffer (FFmpeg.wasm)
+          res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+          next()
+        })
+      },
+    },
   ],
   worker: {
-    format: 'es'
+    format: 'es',
+  },
+  optimizeDeps: {
+    include: ['@breezystack/lamejs', '@ffmpeg/ffmpeg'],
   },
   build: {
     target: 'esnext',
+    commonjsOptions: {
+      include: [/@breezystack\/lamejs/, /@ffmpeg\/ffmpeg/, /node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
         manualChunks: {
-          'icojs': ['icojs'],
-          'jszip': ['jszip']
-        }
-      }
-    }
+          icojs: ['icojs'],
+          jszip: ['jszip'],
+          lamejs: ['@breezystack/lamejs'],
+          ffmpeg: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+        },
+      },
+    },
   },
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './vitest.setup.ts'
-  }
+    setupFiles: './vitest.setup.ts',
+  },
 })
-
