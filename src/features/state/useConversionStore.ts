@@ -47,6 +47,7 @@ interface ConversionStore {
   toasts: ToastMessage[]
   isConverting: boolean
   allFilesConverted: boolean
+  conversionAbortController: AbortController | null
 
   // Actions - File management
   addFiles: (files: Array<{ file: File; sourceFormat: FormatId | null }>) => void
@@ -72,6 +73,8 @@ interface ConversionStore {
   setIsConverting: (isConverting: boolean) => void
   setAllFilesConverted: (allFilesConverted: boolean) => void
   resetConversionStatus: () => void
+  cancelConversion: () => void
+  setConversionAbortController: (controller: AbortController | null) => void
 
   // Actions - Toasts
   addToast: (toast: Omit<ToastMessage, 'id'>) => void
@@ -89,6 +92,7 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   toasts: [],
   isConverting: false,
   allFilesConverted: false,
+  conversionAbortController: null,
 
   // File management
   addFiles: filesData => {
@@ -264,6 +268,18 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
         result: undefined,
       })),
     }))
+  },
+
+  cancelConversion: () => {
+    const state = get()
+    if (state.conversionAbortController) {
+      state.conversionAbortController.abort()
+      set({ isConverting: false, conversionAbortController: null })
+    }
+  },
+
+  setConversionAbortController: controller => {
+    set({ conversionAbortController: controller })
   },
 
   // Toasts

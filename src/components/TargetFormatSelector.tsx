@@ -23,8 +23,8 @@ const FORMAT_DESCRIPTIONS: Record<FormatId, string> = {
   // Audio formats
   mp3: 'MP3 - Universal lossy format (192 kbps) ✓ Always supported',
   wav: 'WAV - Uncompressed PCM audio ✓ Always supported',
+  ogg: 'OGG Vorbis - Open-source lossy format ✓ Always supported',
   flac: 'FLAC - Lossless compression (may fall back to WAV if unsupported)',
-  ogg: 'OGG Opus - Modern open-source format (may fall back to MP3 if unsupported)',
   aac: 'AAC - Advanced Audio Coding (may fall back to MP3 if unsupported)',
   m4a: 'M4A - Apple audio format (may fall back to MP3 if unsupported)',
 }

@@ -6,6 +6,8 @@
 
 // Import the ES module version of lamejs
 import { Mp3Encoder } from '@breezystack/lamejs'
+// Import OGG Vorbis encoder from wasm-media-encoders
+import { createOggEncoder } from 'wasm-media-encoders'
 
 // Create a lamejs object that matches our existing interface
 const lamejs = { Mp3Encoder }
@@ -55,10 +57,13 @@ self.onmessage = async (event: MessageEvent<AudioConversionMessage>) => {
 
       postProgress(100)
     } catch (error) {
-      // Send error response
+      // Send detailed error response
+      console.error('[Worker] Audio conversion error:', error)
+      const errorMessage =
+        error instanceof Error ? `${error.message}\nStack: ${error.stack}` : String(error)
       self.postMessage({
         type: 'error',
-        error: error instanceof Error ? error.message : 'Audio conversion failed',
+        error: errorMessage || 'Audio conversion failed',
       } as AudioConversionResponse)
     }
   }
@@ -90,8 +95,13 @@ async function encodeAudio(
     case 'mp3':
       return encodeMP3(channelData, sampleRate, options?.bitrate || 192)
 
+    case 'ogg':
+      return await encodeOGG(channelData, sampleRate, options?.bitrate || 192)
+
     default:
-      throw new Error(`Unsupported target format: ${targetFormat}. Currently supported: WAV, MP3`)
+      throw new Error(
+        `Unsupported target format: ${targetFormat}. Currently supported: WAV, MP3, OGG`
+      )
   }
 }
 
@@ -234,6 +244,93 @@ function encodeMP3(channelData: Float32Array[], sampleRate: number, bitrate: num
   let offset = 0
 
   for (const chunk of mp3Data) {
+    result.set(chunk, offset)
+    offset += chunk.length
+  }
+
+  postProgress(98)
+  return result.buffer
+}
+
+/**
+ * Encode audio to OGG Vorbis format using wasm-media-encoders
+ */
+async function encodeOGG(
+  channelData: Float32Array[],
+  sampleRate: number,
+  bitrate: number
+): Promise<ArrayBuffer> {
+  const numChannels = channelData.length
+
+  postProgress(5)
+
+  // Create OGG Vorbis encoder (returns a promise)
+  let encoder
+  try {
+    console.log('[Worker] Creating OGG encoder...')
+    encoder = await createOggEncoder()
+    console.log('[Worker] OGG encoder created successfully')
+  } catch (error) {
+    console.error('[Worker] Failed to create OGG encoder:', error)
+    throw new Error(
+      `Failed to initialize OGG encoder: ${error instanceof Error ? error.message : String(error)}`
+    )
+  }
+
+  postProgress(10)
+
+  // Configure encoder
+  // Map bitrate to quality (rough approximation):
+  // 192 kbps ≈ quality 5.0
+  // Quality scale is -1.0 (worst) to 10.0 (best)
+  const quality = Math.max(-1, Math.min(10, (bitrate / 192) * 5.0))
+
+  encoder.configure({
+    sampleRate,
+    channels: numChannels,
+    vbrQuality: quality,
+  })
+
+  postProgress(15)
+
+  // wasm-media-encoders expects separate Float32Array for each channel
+  // Process in chunks to show progress
+  const chunkSize = 1152 // Same as MP3 chunk size
+  const numSamples = channelData[0].length
+  const oggChunks: Uint8Array[] = []
+
+  for (let i = 0; i < numSamples; i += chunkSize) {
+    const end = Math.min(i + chunkSize, numSamples)
+    const chunks = channelData.map(channel => channel.subarray(i, end))
+
+    // encode() returns a Uint8Array that must be copied immediately
+    const encodedChunk = encoder.encode(chunks)
+    if (encodedChunk.length > 0) {
+      // MUST copy the data before next encode() call
+      oggChunks.push(new Uint8Array(encodedChunk))
+    }
+
+    // Report progress (15% - 90%)
+    const progress = 15 + Math.floor(((i + chunkSize) / numSamples) * 75)
+    postProgress(Math.min(90, progress))
+  }
+
+  postProgress(92)
+
+  // Finalize encoding (get last samples)
+  const finalChunk = encoder.finalize()
+  if (finalChunk.length > 0) {
+    oggChunks.push(new Uint8Array(finalChunk))
+  }
+
+  postProgress(95)
+
+  // Combine all OGG chunks into a single ArrayBuffer
+  const totalLength = oggChunks.reduce((acc, chunk) => acc + chunk.length, 0)
+  const result = new Uint8Array(totalLength)
+  let offset = 0
+
+  for (const chunk of oggChunks) {
     result.set(chunk, offset)
     offset += chunk.length
   }

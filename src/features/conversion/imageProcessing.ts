@@ -28,8 +28,14 @@ export async function convertImage(
   file: File,
   targetFormat: FormatId,
   options: ImageProcessingOptions = {},
-  onProgress?: (progress: ConversionProgress) => void
+  onProgress?: (progress: ConversionProgress) => void,
+  abortSignal?: AbortSignal
 ): Promise<Blob> {
+  // Check if already aborted
+  if (abortSignal?.aborted) {
+    throw new Error('User manually cancelled')
+  }
+
   // Read file as ArrayBuffer
   const fileData = await file.arrayBuffer()
 
@@ -39,6 +45,20 @@ export async function convertImage(
   return new Promise((resolve, reject) => {
     // Create worker
     const worker = new ImageProcessingWorker()
+
+    // Handle abort signal
+    const onAbort = () => {
+      worker.terminate()
+      reject(new Error('User manually cancelled'))
+    }
+
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        onAbort()
+        return
+      }
+      abortSignal.addEventListener('abort', onAbort)
+    }
 
     // Handle worker messages
     worker.onmessage = (event: MessageEvent<ImageConversionResponse>) => {
@@ -51,15 +71,18 @@ export async function convertImage(
         const mimeType = `image/${targetFormat === 'jpg' ? 'jpeg' : targetFormat}`
         const blob = new Blob([data], { type: mimeType })
         worker.terminate()
+        abortSignal?.removeEventListener('abort', onAbort)
         resolve(blob)
       } else if (type === 'error') {
         worker.terminate()
+        abortSignal?.removeEventListener('abort', onAbort)
         reject(new Error(error || 'Conversion failed'))
       }
     }
 
     worker.onerror = error => {
       worker.terminate()
+      abortSignal?.removeEventListener('abort', onAbort)
       reject(new Error(`Worker error: ${error.message}`))
     }
 
@@ -85,4 +108,3 @@ export function isImageProcessingSupported(): boolean {
     return false
   }
 }
-

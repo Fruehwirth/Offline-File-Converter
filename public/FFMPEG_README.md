@@ -1,6 +1,6 @@
 # FFmpeg WASM Core Files
 
-These files are required for fast, offline audio conversion to OGG, FLAC, AAC, and M4A formats.
+These files are required for fast, offline audio conversion to FLAC, AAC, and M4A formats.
 
 ## Files
 

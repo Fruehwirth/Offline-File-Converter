@@ -36,12 +36,12 @@ export default defineConfig(({ mode }) => ({
     format: 'es',
   },
   optimizeDeps: {
-    include: ['@breezystack/lamejs', '@ffmpeg/ffmpeg'],
+    include: ['@breezystack/lamejs', '@ffmpeg/ffmpeg', 'wasm-media-encoders'],
   },
   build: {
     target: 'esnext',
     commonjsOptions: {
-      include: [/@breezystack\/lamejs/, /@ffmpeg\/ffmpeg/, /node_modules/],
+      include: [/@breezystack\/lamejs/, /@ffmpeg\/ffmpeg/, /wasm-media-encoders/, /node_modules/],
       transformMixedEsModules: true,
     },
     rollupOptions: {

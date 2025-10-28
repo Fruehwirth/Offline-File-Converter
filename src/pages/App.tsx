@@ -42,6 +42,7 @@ function detectFormatFromMime(mimeType: string): FormatId | null {
 export function App() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isHoveringConvert, setIsHoveringConvert] = useState(false)
 
   // Get auto-download setting
   const autoDownload = useSettingsStore(state => state.settings.autoDownload)
@@ -76,6 +77,10 @@ export function App() {
   const replaceFileWithResult = useConversionStore(state => state.replaceFileWithResult)
   const setAvailableTargets = useConversionStore(state => state.setAvailableTargets)
   const addToast = useConversionStore(state => state.addToast)
+  const cancelConversion = useConversionStore(state => state.cancelConversion)
+  const setConversionAbortController = useConversionStore(
+    state => state.setConversionAbortController
+  )
 
   const hasFiles = files.length > 0
   // Allow convert if: files exist AND there are available targets AND (target format selected OR all files converted) AND not currently converting
@@ -116,6 +121,10 @@ export function App() {
     setIsConverting(true)
     announceToScreenReader('Conversion started')
 
+    // Create AbortController for this conversion batch
+    const abortController = new AbortController()
+    setConversionAbortController(abortController)
+
     const filesToConvert = files.filter(f => f.sourceFormat && f.status !== 'completed')
 
     // Convert all files concurrently using Promise.allSettled
@@ -124,6 +133,11 @@ export function App() {
       updateFileStatus(fileItem.id, 'processing', 0)
 
       try {
+        // Check if conversion was cancelled before starting
+        if (abortController.signal.aborted) {
+          throw new Error('User manually cancelled')
+        }
+
         const sourceFormat = fileItem.sourceFormat as FormatId
         const targetFormat = selectedTargetFormat as FormatId
 
@@ -147,19 +161,31 @@ export function App() {
 
         if (isAudioConversion) {
           // Use audio processing for audio conversions
-          blob = await convertAudio(fileItem.file, targetFormat, { bitrate: 192 }, progress => {
-            console.log(`[App] Updating file ${fileItem.file.name}:`, {
-              id: fileItem.id,
-              percent: progress.percent,
-              message: progress.message,
-            })
-            updateFileStatus(fileItem.id, 'processing', progress.percent, progress.message)
-          })
+          blob = await convertAudio(
+            fileItem.file,
+            targetFormat,
+            { bitrate: 192 },
+            progress => {
+              console.log(`[App] Updating file ${fileItem.file.name}:`, {
+                id: fileItem.id,
+                percent: progress.percent,
+                message: progress.message,
+              })
+              updateFileStatus(fileItem.id, 'processing', progress.percent, progress.message)
+            },
+            abortController.signal
+          )
         } else {
           // Use image processing for image conversions
-          blob = await convertImage(fileItem.file, targetFormat, { quality: 0.92 }, progress => {
-            updateFileStatus(fileItem.id, 'processing', progress.percent)
-          })
+          blob = await convertImage(
+            fileItem.file,
+            targetFormat,
+            { quality: 0.92 },
+            progress => {
+              updateFileStatus(fileItem.id, 'processing', progress.percent)
+            },
+            abortController.signal
+          )
         }
 
         // Detect actual format from blob (in case of fallback)
@@ -182,10 +208,13 @@ export function App() {
         const message = error instanceof Error ? error.message : 'Conversion failed'
         updateFileStatus(fileItem.id, 'error', 0, message)
 
-        addToast({
-          type: 'error',
-          message: `Failed to convert ${fileItem.file.name}: ${message}`,
-        })
+        // Only show toast if it's not a cancellation
+        if (!message.includes('cancelled') && !message.includes('aborted')) {
+          addToast({
+            type: 'error',
+            message: `Failed to convert ${fileItem.file.name}: ${message}`,
+          })
+        }
 
         return { success: false, fileId: fileItem.id, fileName: fileItem.file.name }
       }
@@ -195,6 +224,7 @@ export function App() {
     await Promise.allSettled(conversionPromises)
 
     setIsConverting(false)
+    setConversionAbortController(null)
 
     // Get the fresh state after all updates
     const currentFiles = useConversionStore.getState().files
@@ -269,7 +299,7 @@ export function App() {
     return result
   })()
 
-  const showProgressBackground = isConverting && files.length > 2
+  const showProgressBackground = isConverting
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-bg">
@@ -312,19 +342,35 @@ export function App() {
           <div className="container mx-auto px-4 pt-8 pb-4 max-w-[630px] relative z-10">
             <div className="flex gap-3">
               <button
-                onClick={handleConvert}
-                disabled={!canConvert}
+                onClick={() => {
+                  if (isConverting) {
+                    cancelConversion()
+                    addToast({
+                      type: 'info',
+                      message: 'Conversion cancelled',
+                    })
+                  } else {
+                    handleConvert()
+                  }
+                }}
+                onMouseEnter={() => setIsHoveringConvert(true)}
+                onMouseLeave={() => setIsHoveringConvert(false)}
+                disabled={!canConvert && !isConverting}
                 className={`
                   rounded-brand font-semibold text-lg
-                  transition-all duration-500 ease-in-out relative overflow-hidden
-                  focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+                  transition-all duration-300 ease-in-out relative overflow-hidden
+                  focus:outline-none
                   ${allFilesConverted ? 'px-0 py-0' : 'px-8 py-4'}
                   ${
-                    !canConvert
-                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                    !canConvert && !isConverting
+                      ? 'bg-gray-300/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                       : allFilesConverted
-                        ? 'bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white'
-                        : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
+                        ? 'bg-slate-600/50 hover:bg-slate-700/50 dark:bg-slate-700/50 dark:hover:bg-slate-600/50 text-white'
+                        : isConverting && isHoveringConvert
+                          ? 'bg-gray-300/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 cursor-pointer'
+                          : isConverting
+                            ? 'bg-gray-300/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                            : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
                   }
                 `}
                 style={{
@@ -332,39 +378,62 @@ export function App() {
                   height: '72px',
                 }}
               >
-                {/* Progress background overlay - only shown when converting more than 2 files */}
+                {/* Progress background overlay */}
                 {showProgressBackground && (
                   <div
-                    className="absolute inset-0 bg-white/20 transition-all duration-300"
+                    className="absolute inset-0 bg-gray-700/30 dark:bg-gray-600/30 transition-all duration-300"
                     style={{
                       width: `${overallProgress}%`,
                     }}
                   />
                 )}
+                {/* Red cancel overlay - shown on hover */}
+                {isConverting && isHoveringConvert && (
+                  <div className="absolute inset-0 bg-red-500/10 dark:bg-red-600/10 rounded-brand transition-all duration-300" />
+                )}
                 {isConverting ? (
-                  <span className="flex items-center justify-center gap-3 relative z-10">
-                    <svg
-                      className="animate-spin h-6 w-6"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
+                  isHoveringConvert ? (
+                    <span className="flex items-center justify-center gap-3 relative z-10 text-white font-bold">
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
                         stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Converting...
-                  </span>
+                        viewBox="0 0 24 24"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Cancel
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-3 relative z-10">
+                      <svg
+                        className="animate-spin h-6 w-6"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Converting... {Math.round(overallProgress)}%
+                    </span>
+                  )
                 ) : (
                   <span
                     className={`flex items-center justify-center relative z-10 ${allFilesConverted ? '' : 'gap-3'}`}
@@ -413,7 +482,7 @@ export function App() {
                   bg-brand-bg-secondary hover:bg-brand-bg-hover
                   text-brand-text border border-brand-border
                   transition-all duration-500 ease-in-out relative overflow-hidden
-                  focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+                  focus:outline-none
                   disabled:opacity-50 disabled:cursor-not-allowed
                 "
                 style={{

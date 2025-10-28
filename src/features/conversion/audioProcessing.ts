@@ -3,7 +3,8 @@
  * Handles audio decoding and format conversion using efficient encoders:
  * - MP3: lamejs encoder (worker)
  * - WAV: Native PCM encoder (worker)
- * - OGG/FLAC/AAC/M4A: FFmpeg WASM (fast, non-realtime encoding)
+ * - OGG: wasm-media-encoders Vorbis encoder (worker)
+ * - FLAC/AAC/M4A: FFmpeg WASM (fast, non-realtime encoding)
  */
 
 import type { FormatId } from './formatRegistry'
@@ -191,26 +192,38 @@ export async function convertAudio(
   file: File,
   targetFormat: FormatId,
   options: AudioProcessingOptions = {},
-  onProgress?: (progress: ConversionProgress) => void
+  onProgress?: (progress: ConversionProgress) => void,
+  abortSignal?: AbortSignal
 ): Promise<Blob> {
-  // For MP3 and WAV, use worker-based encoding (already fast)
-  if (targetFormat === 'mp3' || targetFormat === 'wav') {
-    return convertAudioWithWorker(file, targetFormat, options, onProgress)
+  // Check if already aborted
+  if (abortSignal?.aborted) {
+    throw new Error('User manually cancelled')
   }
 
-  // For OGG, FLAC, AAC, M4A, use FFmpeg 0.11 WASM
-  return convertAudioWithFFmpeg(file, targetFormat, options, onProgress)
+  // For MP3, WAV, and OGG, use worker-based encoding (already fast)
+  if (targetFormat === 'mp3' || targetFormat === 'wav' || targetFormat === 'ogg') {
+    return convertAudioWithWorker(file, targetFormat, options, onProgress, abortSignal)
+  }
+
+  // For FLAC, AAC, M4A, use FFmpeg 0.11 WASM
+  return convertAudioWithFFmpeg(file, targetFormat, options, onProgress, abortSignal)
 }
 
 /**
- * Convert audio using worker (for MP3 and WAV)
+ * Convert audio using worker (for MP3, WAV, and OGG)
  */
 async function convertAudioWithWorker(
   file: File,
   targetFormat: FormatId,
   options: AudioProcessingOptions = {},
-  onProgress?: (progress: ConversionProgress) => void
+  onProgress?: (progress: ConversionProgress) => void,
+  abortSignal?: AbortSignal
 ): Promise<Blob> {
+  // Check if already aborted
+  if (abortSignal?.aborted) {
+    throw new Error('User manually cancelled')
+  }
+
   // Decode audio in main thread (AudioContext only works here, not in workers)
   // Start at 0% since we only want to show encoding progress
   onProgress?.({ percent: 0, message: 'Preparing audio...' })
@@ -228,6 +241,12 @@ async function convertAudioWithWorker(
     )
   }
 
+  // Check again after async operation
+  if (abortSignal?.aborted) {
+    await audioContext.close()
+    throw new Error('User manually cancelled')
+  }
+
   // Extract channel data (PCM)
   const channelData: Float32Array[] = []
   for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
@@ -240,6 +259,21 @@ async function convertAudioWithWorker(
   return new Promise((resolve, reject) => {
     const worker = new AudioProcessingWorker()
 
+    // Handle abort signal
+    const onAbort = () => {
+      worker.terminate()
+      audioContext.close()
+      reject(new Error('User manually cancelled'))
+    }
+
+    if (abortSignal) {
+      if (abortSignal.aborted) {
+        onAbort()
+        return
+      }
+      abortSignal.addEventListener('abort', onAbort)
+    }
+
     worker.onmessage = (event: MessageEvent<AudioConversionResponse>) => {
       const { type, data, error, progress } = event.data
 
@@ -251,19 +285,33 @@ async function convertAudioWithWorker(
         const blob = new Blob([data], { type: mimeType })
         worker.terminate()
         audioContext.close()
+        abortSignal?.removeEventListener('abort', onAbort)
         onProgress?.({ percent: 100, message: 'Complete!' })
         resolve(blob)
       } else if (type === 'error') {
         worker.terminate()
         audioContext.close()
+        abortSignal?.removeEventListener('abort', onAbort)
         reject(new Error(error || 'Audio conversion failed'))
       }
     }
 
-    worker.onerror = error => {
+    worker.onerror = (error: ErrorEvent) => {
+      console.error('[Worker Error Event]', {
+        message: error.message,
+        filename: error.filename,
+        lineno: error.lineno,
+        colno: error.colno,
+        error: error.error,
+        fullEvent: error,
+      })
       worker.terminate()
       audioContext.close()
-      reject(new Error(`Worker error: ${error.message}`))
+      abortSignal?.removeEventListener('abort', onAbort)
+      const errorMsg = error.message || error.error?.message || 'Unknown worker error'
+      reject(
+        new Error(`Worker error: ${errorMsg} (at ${error.filename}:${error.lineno}:${error.colno})`)
+      )
     }
 
     // Send encoding request with PCM data
@@ -282,14 +330,20 @@ async function convertAudioWithWorker(
 }
 
 /**
- * Convert audio using FFmpeg 0.11 WASM (for OGG, FLAC, AAC, M4A)
+ * Convert audio using FFmpeg 0.11 WASM (for FLAC, AAC, M4A)
  */
 async function convertAudioWithFFmpeg(
   file: File,
   targetFormat: FormatId,
   options: AudioProcessingOptions = {},
-  onProgress?: (progress: ConversionProgress) => void
+  onProgress?: (progress: ConversionProgress) => void,
+  abortSignal?: AbortSignal
 ): Promise<Blob> {
+  // Check if already aborted
+  if (abortSignal?.aborted) {
+    throw new Error('User manually cancelled')
+  }
+
   console.log('[convertAudioWithFFmpeg] Starting conversion:', file.name, 'to', targetFormat)
   onProgress?.({ percent: 0, message: 'Queued...' })
 
@@ -301,6 +355,10 @@ async function convertAudioWithFFmpeg(
 
   // Queue the conversion - will run when an FFmpeg instance is available
   return queueFFmpegTask(async ffmpeg => {
+    // Check if cancelled before FFmpeg task starts
+    if (abortSignal?.aborted) {
+      throw new Error('User manually cancelled')
+    }
     // Generate unique conversion ID to prevent cross-contamination
     const conversionId = `${timestamp}_${random}`
 
@@ -321,6 +379,16 @@ async function convertAudioWithFFmpeg(
       ffmpeg.FS('writeFile', inputFileName, await fetchFile(file))
       console.log('[convertAudioWithFFmpeg] Input file written:', inputFileName)
 
+      // Check again after async operation
+      if (abortSignal?.aborted) {
+        try {
+          ffmpeg.FS('unlink', inputFileName)
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        throw new Error('User manually cancelled')
+      }
+
       onProgress?.({ percent: 5, message: 'Encoding...' })
 
       // Build FFmpeg command
@@ -332,6 +400,10 @@ async function convertAudioWithFFmpeg(
 
       // Set up progress monitoring with ID verification
       ffmpeg.setProgress(({ ratio }: { ratio: number }) => {
+        // Check if conversion was cancelled
+        if (abortSignal?.aborted) {
+          return
+        }
         // Only process callbacks for the current conversion
         if (ffmpeg._currentConversionId !== conversionId) {
           console.warn('[FFmpeg Progress] Ignoring callback for wrong conversion:', {
@@ -419,11 +491,6 @@ function buildFFmpegArgs(
   const args = ['-i', inputFile]
 
   switch (targetFormat) {
-    case 'ogg':
-      // OGG Vorbis
-      args.push('-c:a', 'libvorbis', '-q:a', '5') // Quality 5 ≈ 160 kbps
-      break
-
     case 'flac':
       // FLAC (lossless)
       args.push('-c:a', 'flac', '-compression_level', '5')
