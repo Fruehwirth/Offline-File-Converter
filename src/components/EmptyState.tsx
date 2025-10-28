@@ -6,11 +6,21 @@
 
 import { useRef, useState } from 'react'
 import { useFileHandler } from '../features/conversion/useFileHandler'
+import { FORMATS } from '../features/conversion/formatRegistry'
+import imageIcon from '../assets/icons/image.svg'
+import audioIcon from '../assets/icons/audio.svg'
 
 export function EmptyState() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [hoveredIcon, setHoveredIcon] = useState<'image' | 'audio' | null>(null)
   const { handleFiles } = useFileHandler()
+
+  // Get image and audio formats
+  const imageFormats = FORMATS.filter(f => f.category === 'photo' || f.category === 'icon').map(
+    f => `.${f.id}`
+  )
+  const audioFormats = FORMATS.filter(f => f.category === 'audio').map(f => `.${f.id}`)
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
@@ -52,7 +62,7 @@ export function EmptyState() {
         className={`
           flex flex-col items-center justify-center min-h-[400px] text-center px-4
           md:border-2 md:border-dashed md:rounded-brand-lg md:p-8 transition-colors
-          w-full min-w-[280px] max-w-[600px]
+          w-full min-w-[280px] max-w-[700px]
           md:bg-gray-100 md:dark:bg-black/20 md:hover:bg-gray-200 md:dark:hover:bg-black/30
           ${
             isDragging
@@ -77,21 +87,83 @@ export function EmptyState() {
           aria-hidden="true"
         />
 
-        <div className="w-20 h-20 rounded-full bg-brand-accent/10 flex items-center justify-center mb-6">
-          <svg
-            className="w-10 h-10 text-brand-accent"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
+        {/* Format Icons with Tooltips */}
+        <div className="flex gap-8 mb-8 justify-center">
+          {/* Image Icon */}
+          <div
+            className="relative flex flex-col items-center"
+            onMouseEnter={() => setHoveredIcon('image')}
+            onMouseLeave={() => setHoveredIcon(null)}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
+            <div className="w-20 h-20 flex items-center justify-center transition-transform hover:scale-110">
+              <img
+                src={imageIcon}
+                alt="Image formats"
+                className="w-full h-full object-contain"
+                style={{ imageRendering: 'crisp-edges' }}
+              />
+            </div>
+            {/* Tooltip */}
+            {hoveredIcon === 'image' && (
+              <div
+                className="absolute top-24 z-10 border-2 border-brand-border rounded-brand shadow-lg p-4 min-w-[200px] max-w-[280px]"
+                style={{
+                  backgroundColor: 'rgba(30, 30, 30, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                }}
+              >
+                <div className="flex flex-wrap gap-1">
+                  {imageFormats.map(format => (
+                    <div
+                      key={format}
+                      className="text-sm font-medium text-brand-text px-2 py-1 flex-1 min-w-[60px] text-center"
+                    >
+                      {format}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Audio Icon */}
+          <div
+            className="relative flex flex-col items-center"
+            onMouseEnter={() => setHoveredIcon('audio')}
+            onMouseLeave={() => setHoveredIcon(null)}
+          >
+            <div className="w-20 h-20 flex items-center justify-center transition-transform hover:scale-110">
+              <img
+                src={audioIcon}
+                alt="Audio formats"
+                className="w-full h-full object-contain"
+                style={{ imageRendering: 'crisp-edges' }}
+              />
+            </div>
+            {/* Tooltip */}
+            {hoveredIcon === 'audio' && (
+              <div
+                className="absolute top-24 z-10 border-2 border-brand-border rounded-brand shadow-lg p-4 min-w-[200px] max-w-[280px]"
+                style={{
+                  backgroundColor: 'rgba(30, 30, 30, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                }}
+              >
+                <div className="flex flex-wrap gap-1">
+                  {audioFormats.map(format => (
+                    <div
+                      key={format}
+                      className="text-sm font-medium text-brand-text px-2 py-1 flex-1 min-w-[60px] text-center"
+                    >
+                      {format}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <h2 className="text-2xl font-bold text-brand-text mb-2">Convert any files locally</h2>
@@ -100,8 +172,6 @@ export function EmptyState() {
           Drag & drop any files here or click to select.
           <br />
           100% local processing • No uploads • No tracking
-          <br />
-          All processing happens locally in your browser
         </p>
 
         <button
