@@ -51,12 +51,12 @@ export function EmptyState() {
       <div
         className={`
           flex flex-col items-center justify-center min-h-[400px] text-center px-4
-          border-2 border-dashed rounded-brand-lg p-8 transition-colors
+          md:border-2 md:border-dashed md:rounded-brand-lg md:p-8 transition-colors
           w-full min-w-[280px] max-w-[600px]
           ${
             isDragging
-              ? 'border-brand-accent bg-brand-accent/5'
-              : 'border-brand-border hover:border-brand-accent/50'
+              ? 'md:border-brand-accent md:bg-brand-accent/5'
+              : 'md:border-brand-border md:hover:border-brand-accent/50'
           }
         `}
         onDragEnter={handleDragEnter}
@@ -112,8 +112,16 @@ export function EmptyState() {
           text-white font-medium
           transition-colors
           focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-bg
+          flex items-center gap-2
         "
         >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path
+              fillRule="evenodd"
+              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
           Select Files
         </button>
 

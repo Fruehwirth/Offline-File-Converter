@@ -237,7 +237,9 @@ export function App() {
     <div className="min-h-screen flex flex-col bg-brand-bg">
       <Header />
 
-      <main className={`flex-1 container mx-auto px-4 ${!hasFiles ? 'flex items-center' : 'py-8'}`}>
+      <main
+        className={`flex-1 container mx-auto px-4 py-8 ${!hasFiles ? 'md:flex md:items-center' : ''}`}
+      >
         {!hasFiles ? (
           <EmptyState />
         ) : (
