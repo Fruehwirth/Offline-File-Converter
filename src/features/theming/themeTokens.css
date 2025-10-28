@@ -5,15 +5,15 @@
 
 :root {
   /* Light theme (fallback, but dark is default) */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f5f5f5;
-  --color-bg-hover: #e5e5e5;
-  --color-text: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-border: #d4d4d4;
+  --color-bg: #f8fafc;
+  --color-bg-secondary: #ffffff;
+  --color-bg-hover: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-border: #cbd5e1;
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
-  --color-success: #22c55e;
+  --color-success: #10b981;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
   
@@ -58,21 +58,21 @@
 
 [data-theme='light'] {
   /* Explicit light theme override */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f5f5f5;
-  --color-bg-hover: #e5e5e5;
-  --color-text: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-border: #d4d4d4;
+  --color-bg: #f8fafc;
+  --color-bg-secondary: #ffffff;
+  --color-bg-hover: #f1f5f9;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-border: #cbd5e1;
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
-  --color-success: #22c55e;
+  --color-success: #10b981;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* System preference support */
