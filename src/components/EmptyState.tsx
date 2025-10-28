@@ -50,9 +50,9 @@ export function EmptyState() {
     <div className="flex justify-center items-center w-full">
       <div
         className={`
-          flex flex-col items-center justify-center min-h-[400px] md:min-h-[400px] text-center px-4
-          border-2 border-dashed rounded-brand-lg p-6 md:p-8 transition-colors
-          w-full md:max-w-[50%] min-w-[280px]
+          flex flex-col items-center justify-center min-h-[400px] text-center px-4
+          border-2 border-dashed rounded-brand-lg p-8 transition-colors
+          w-full min-w-[280px] max-w-[600px]
           ${
             isDragging
               ? 'border-brand-accent bg-brand-accent/5'
@@ -76,9 +76,9 @@ export function EmptyState() {
           aria-hidden="true"
         />
 
-        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand-accent/10 flex items-center justify-center mb-4 md:mb-6">
+        <div className="w-20 h-20 rounded-full bg-brand-accent/10 flex items-center justify-center mb-6">
           <svg
-            className="w-8 h-8 md:w-10 md:h-10 text-brand-accent"
+            className="w-10 h-10 text-brand-accent"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -93,11 +93,9 @@ export function EmptyState() {
           </svg>
         </div>
 
-        <h2 className="text-xl md:text-2xl font-bold text-brand-text mb-2">
-          Convert files locally
-        </h2>
+        <h2 className="text-2xl font-bold text-brand-text mb-2">Convert files locally</h2>
 
-        <p className="text-sm md:text-base text-brand-text-secondary mb-6 max-w-md">
+        <p className="text-base text-brand-text-secondary mb-6 max-w-md">
           Drag & drop any files here or click to select.
           <br />
           100% local processing • No uploads • No tracking

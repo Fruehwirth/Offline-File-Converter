@@ -3,9 +3,9 @@
  * Allows user to choose which format to convert to
  */
 
+import { useState, useEffect } from 'react'
 import { useConversionStore } from '../features/state/useConversionStore'
 import { getFormatLabel, type FormatId } from '../features/conversion/formatRegistry'
-import { OptionsMenu } from './OptionsMenu'
 
 // Format descriptions for tooltips
 const FORMAT_DESCRIPTIONS: Record<FormatId, string> = {
@@ -43,14 +43,57 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
   const availableTargets = useConversionStore(state => state.availableTargets)
   const selectedTargetFormat = useConversionStore(state => state.selectedTargetFormat)
   const setSelectedTargetFormat = useConversionStore(state => state.setSelectedTargetFormat)
+  const files = useConversionStore(state => state.files)
 
-  if (availableTargets.length === 0) {
-    return null
-  }
+  // Track whether we should show the error (with a small delay to avoid flash during initial calculation)
+  const [showError, setShowError] = useState(false)
 
   const handleFormatClick = (format: string) => {
     if (disabled) return
     setSelectedTargetFormat(format as any)
+  }
+
+  // Check if all files have their formats detected (not in initial loading state)
+  const allFormatsDetected = files.length > 0 && files.every(f => f.sourceFormat !== null)
+  const hasIncompatibleFiles = allFormatsDetected && availableTargets.length === 0
+
+  // Delay showing the error to avoid flash during initial target calculation
+  useEffect(() => {
+    if (hasIncompatibleFiles) {
+      const timer = setTimeout(() => {
+        setShowError(true)
+      }, 100) // Small delay to let the calculation complete
+      return () => clearTimeout(timer)
+    } else {
+      setShowError(false)
+    }
+  }, [hasIncompatibleFiles])
+
+  // If there are files with detected formats but no available targets, show error message
+  if (showError) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <label className="block text-lg font-bold text-brand-text">Convert to</label>
+          </div>
+
+          <div className="px-4 py-3 rounded-brand bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800">
+            <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+              No common format available
+            </p>
+            <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+              The selected files have no compatible conversion format. Please remove some files to
+              continue.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (availableTargets.length === 0) {
+    return null
   }
 
   return (
@@ -61,7 +104,6 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
       >
         <div className="flex items-center gap-3">
           <label className="block text-lg font-bold text-brand-text">Convert to</label>
-          <OptionsMenu />
         </div>
 
         <div className="flex flex-wrap gap-2">

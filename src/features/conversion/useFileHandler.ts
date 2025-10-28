@@ -101,23 +101,28 @@ export function useFileHandler() {
     if (detectedFiles.length > 0) {
       addFiles(detectedFiles)
 
-      // Compute available targets
-      const sourceFormats = detectedFiles
-        .map(({ sourceFormat }) => sourceFormat!)
-        .filter((format, index, arr) => arr.indexOf(format) === index)
+      // Compute available targets based on ALL files (existing + new)
+      // Wait for the state to update
+      setTimeout(() => {
+        const currentFiles = useConversionStore.getState().files
+        const allSourceFormats = currentFiles
+          .map(f => f.sourceFormat)
+          .filter((format): format is NonNullable<typeof format> => format !== null)
+          .filter((format, index, arr) => arr.indexOf(format) === index)
 
-      const commonTargets = findCommonTargets(sourceFormats)
-      setAvailableTargets(commonTargets)
+        const commonTargets = findCommonTargets(allSourceFormats)
+        setAvailableTargets(commonTargets)
 
-      // Show compatibility message
-      const { canConvert, message } = buildCompatibilityMessage(sourceFormats)
+        // Show compatibility message
+        const { canConvert, message } = buildCompatibilityMessage(allSourceFormats)
 
-      if (!canConvert) {
-        addToast({
-          type: 'warning',
-          message,
-        })
-      }
+        if (!canConvert) {
+          addToast({
+            type: 'error',
+            message,
+          })
+        }
+      }, 0)
     }
 
     // Show error summary if there were failed files

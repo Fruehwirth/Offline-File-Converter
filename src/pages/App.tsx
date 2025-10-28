@@ -59,6 +59,7 @@ export function App() {
   const selectedTargetFormat = useConversionStore(state => state.selectedTargetFormat)
   const isConverting = useConversionStore(state => state.isConverting)
   const allFilesConverted = useConversionStore(state => state.allFilesConverted)
+  const availableTargets = useConversionStore(state => state.availableTargets)
 
   const setIsConverting = useConversionStore(state => state.setIsConverting)
   const setAllFilesConverted = useConversionStore(state => state.setAllFilesConverted)
@@ -69,8 +70,12 @@ export function App() {
   const addToast = useConversionStore(state => state.addToast)
 
   const hasFiles = files.length > 0
-  // Allow convert if: files exist AND (target format selected OR all files converted) AND not currently converting
-  const canConvert = hasFiles && (selectedTargetFormat || allFilesConverted) && !isConverting
+  // Allow convert if: files exist AND there are available targets AND (target format selected OR all files converted) AND not currently converting
+  const canConvert =
+    hasFiles &&
+    availableTargets.length > 0 &&
+    (selectedTargetFormat || allFilesConverted) &&
+    !isConverting
 
   const handleConvert = async () => {
     if (!canConvert) return
@@ -232,7 +237,7 @@ export function App() {
     <div className="min-h-screen flex flex-col bg-brand-bg">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className={`flex-1 container mx-auto px-4 ${!hasFiles ? 'flex items-center' : 'py-8'}`}>
         {!hasFiles ? (
           <EmptyState />
         ) : (
@@ -256,8 +261,15 @@ export function App() {
 
       {/* Full-width convert button at the bottom */}
       {hasFiles && (
-        <div className="fixed bottom-0 left-0 right-0 bg-brand-bg/80 backdrop-blur-sm shadow-lg z-40">
-          <div className="container mx-auto px-4 py-4 max-w-[630px]">
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <div
+            className="absolute inset-0 bg-brand-bg/70 backdrop-blur-md"
+            style={{
+              maskImage: 'linear-gradient(to top, black 0%, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to top, black 0%, black 85%, transparent 100%)',
+            }}
+          />
+          <div className="container mx-auto px-4 pt-8 pb-4 max-w-[630px] relative z-10">
             <button
               onClick={handleConvert}
               disabled={!canConvert}

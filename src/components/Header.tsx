@@ -9,10 +9,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 relative">
       <div
-        className="absolute inset-0 bg-brand-bg/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-bg/70 backdrop-blur-md"
         style={{
-          maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
         }}
       />
       <div className="container mx-auto px-4 py-4 flex items-center justify-between relative z-10">

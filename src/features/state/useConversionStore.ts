@@ -109,9 +109,44 @@ export const useConversionStore = create<ConversionStore>((set, get) => ({
   },
 
   removeFile: id => {
-    set(state => ({
-      files: state.files.filter(f => f.id !== id),
-    }))
+    set(state => {
+      const updatedFiles = state.files.filter(f => f.id !== id)
+
+      // If no files left, reset everything
+      if (updatedFiles.length === 0) {
+        return {
+          files: [],
+          availableTargets: [],
+          selectedTargetFormat: null,
+          allFilesConverted: false,
+        }
+      }
+
+      return {
+        files: updatedFiles,
+      }
+    })
+
+    // Recalculate available targets after file removal
+    // Need to import this at the top of the file
+    setTimeout(() => {
+      const currentFiles = get().files
+
+      if (currentFiles.length === 0) {
+        return // Already handled above
+      }
+
+      // Import findCommonTargets dynamically to avoid circular dependency
+      import('../conversion/commonDenominators').then(({ findCommonTargets }) => {
+        const allSourceFormats = currentFiles
+          .map(f => f.sourceFormat)
+          .filter((format): format is FormatId => format !== null)
+          .filter((format, index, arr) => arr.indexOf(format) === index)
+
+        const commonTargets = findCommonTargets(allSourceFormats)
+        get().setAvailableTargets(commonTargets)
+      })
+    }, 0)
   },
 
   clearFiles: () => {
