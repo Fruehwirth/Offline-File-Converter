@@ -169,10 +169,19 @@ export function App() {
   }
 
   // Calculate overall progress for multiple file conversions
-  const overallProgress =
-    isConverting && files.length > 0
-      ? files.reduce((sum, file) => sum + (file.progress || 0), 0) / files.length
-      : 0
+  // Ensure completed files always count as 100% (not their stored progress value)
+  const overallProgress = (() => {
+    if (!isConverting || files.length === 0) return 0
+
+    const totalProgress = files.reduce((sum, file) => {
+      // Completed files always contribute 100%
+      if (file.status === 'completed') return sum + 100
+      // Processing/queued files use their current progress
+      return sum + (file.progress || 0)
+    }, 0)
+
+    return totalProgress / files.length
+  })()
 
   const showProgressBackground = isConverting && files.length > 2
 
@@ -196,15 +205,8 @@ export function App() {
 
       {/* Full-width convert button at the bottom */}
       {hasFiles && (
-        <div className="fixed bottom-0 left-0 right-0 shadow-lg z-40">
-          <div
-            className="absolute inset-0 bg-brand-bg/80 backdrop-blur-sm"
-            style={{
-              maskImage: 'linear-gradient(to top, black 0%, black 70%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to top, black 0%, black 70%, transparent 100%)',
-            }}
-          />
-          <div className="container mx-auto px-4 py-4 max-w-[630px] relative z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-brand-bg/80 backdrop-blur-sm shadow-lg z-40">
+          <div className="container mx-auto px-4 py-4 max-w-[630px]">
             <button
               onClick={handleConvert}
               disabled={!canConvert}

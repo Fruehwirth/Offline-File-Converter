@@ -26,6 +26,14 @@ function useSmoothProgress(targetProgress: number, status: string) {
   useEffect(() => {
     // When target changes, start smooth animation
     if (smoothProgress !== targetProgress) {
+      // If progress goes backward, reset immediately (no animation)
+      // This handles when a completed file is reused for sequential conversion
+      if (targetProgress < smoothProgress - 5) {
+        // Allow 5% tolerance for small variations
+        setSmoothProgress(targetProgress)
+        return
+      }
+
       startProgressRef.current = smoothProgress
       startTimeRef.current = Date.now()
 
