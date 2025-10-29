@@ -129,6 +129,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
             </button>
           ))}
         </div>
+        <div style={{ height: '100px' }}></div>
 
         {availableTargets.length > 1 && (
           <p className="text-xs text-brand-text-secondary">

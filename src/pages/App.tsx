@@ -375,11 +375,6 @@ export function App() {
               >
                 <div className="drawer__content">
                   <TargetFormatSelector disabled={isConverting} />
-
-                  {/* Cancel button */}
-                  <button onClick={() => setIsDrawerOpen(false)} className="btn-cancel">
-                    Cancel
-                  </button>
                 </div>
               </div>
 

@@ -100,32 +100,6 @@
   cursor: not-allowed;
 }
 
-/* Cancel button */
-.btn-cancel {
-  width: 100%;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border-radius: 9999px;
-  border-width: 1px;
-  border-color: var(--color-border);
-  background-color: #f3f4f6;
-  color: var(--color-text);
-  font-weight: 500;
-  transition: all 150ms ease-in-out;
-}
-
-.btn-cancel:hover {
-  background-color: #e5e7eb;
-}
-
-[data-theme='dark'] .btn-cancel {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-[data-theme='dark'] .btn-cancel:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
 /* Converting state button */
 .btn-converting {
   background-color: #9ca3af !important;
