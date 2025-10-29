@@ -37,6 +37,20 @@ export interface Capability {
   category: 'icon' | 'photo' | 'vector' | 'document' | 'audio'
 }
 
+// All image formats that can be converted to each other
+const ALL_IMAGE_FORMATS: FormatId[] = [
+  'png',
+  'ico',
+  'jpeg',
+  'jpg',
+  'webp',
+  'gif',
+  'bmp',
+  'tiff',
+  'avif',
+  'heic',
+]
+
 export const FORMATS: Capability[] = [
   // Icon formats
   {
@@ -49,7 +63,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
       },
     ],
-    canConvertTo: ['ico', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'tiff', 'avif'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'png'),
     category: 'photo',
   },
   {
@@ -62,7 +76,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x00, 0x00, 0x01, 0x00],
       },
     ],
-    canConvertTo: ['png'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'ico'),
     category: 'icon',
   },
 
@@ -77,7 +91,7 @@ export const FORMATS: Capability[] = [
         bytes: [0xff, 0xd8, 0xff],
       },
     ],
-    canConvertTo: ['png', 'webp', 'gif', 'bmp', 'tiff', 'avif', 'heic'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'jpeg'),
     category: 'photo',
   },
   {
@@ -90,7 +104,7 @@ export const FORMATS: Capability[] = [
         bytes: [0xff, 0xd8, 0xff],
       },
     ],
-    canConvertTo: ['png', 'webp', 'gif', 'bmp', 'tiff', 'avif', 'heic'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'jpg'),
     category: 'photo',
   },
   {
@@ -103,7 +117,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x57, 0x45, 0x42, 0x50], // "WEBP"
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'gif', 'bmp', 'tiff', 'avif'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'webp'),
     category: 'photo',
   },
   {
@@ -116,7 +130,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x47, 0x49, 0x46, 0x38], // "GIF8"
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'webp', 'bmp', 'tiff'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'gif'),
     category: 'photo',
   },
   {
@@ -129,7 +143,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x42, 0x4d], // "BM"
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'webp', 'gif', 'tiff', 'avif'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'bmp'),
     category: 'photo',
   },
   {
@@ -146,7 +160,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x4d, 0x4d, 0x00, 0x2a], // Big-endian
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'avif'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'tiff'),
     category: 'photo',
   },
   {
@@ -159,7 +173,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66], // "ftypavif"
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'tiff'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'avif'),
     category: 'photo',
   },
   {
@@ -172,7 +186,7 @@ export const FORMATS: Capability[] = [
         bytes: [0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63], // "ftypheic"
       },
     ],
-    canConvertTo: ['png', 'jpeg', 'jpg', 'webp', 'gif', 'bmp', 'tiff', 'avif'],
+    canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'heic'),
     category: 'photo',
   },
 

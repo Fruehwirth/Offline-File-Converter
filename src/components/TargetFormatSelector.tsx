@@ -129,10 +129,9 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
             </button>
           ))}
         </div>
-        <div style={{ height: '100px' }}></div>
 
         {availableTargets.length > 1 && (
-          <p className="text-xs text-brand-text-secondary">
+          <p className="text-xs text-brand-text-secondary mt-3">
             All selected files can be converted to these formats
           </p>
         )}
