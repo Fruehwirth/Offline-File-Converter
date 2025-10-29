@@ -72,7 +72,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
   // If there are files with detected formats but no available targets, show error message
   if (showError) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <label className="block text-lg font-bold text-brand-text">Convert to</label>
@@ -97,24 +97,24 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {/* Format selector */}
-      <div
-        className={`space-y-3 transition-opacity ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-      >
+      <div className={`space-y-3 w-full ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="flex items-center gap-3">
           <label className="block text-lg font-bold text-brand-text">Convert to</label>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 w-full">
           {availableTargets.map(format => (
             <button
               key={format}
               onClick={() => handleFormatClick(format)}
+              style={{
+                outline: 'none',
+              }}
               className={`
                 relative px-6 py-2 rounded-brand border-2 font-medium min-w-[80px]
                 transition-all
-                focus:outline-none
                 ${
                   selectedTargetFormat === format
                     ? 'bg-brand-accent hover:bg-brand-accent-hover border-brand-accent text-white'

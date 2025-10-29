@@ -362,155 +362,98 @@ export function App() {
             aria-hidden="true"
             disabled={isConverting}
           />
+        </>
+      )}
 
-          {/* Fixed Bottom Section - Floating Button & Drawer */}
-          <div className="bottom-section">
-            {/* Frosted glass backdrop with blur gradient - theme-aware */}
-            <div className="bottom-section__backdrop" />
+      {/* Fixed Bottom Section - Floating Button & Drawer */}
+      <div className={`bottom-section ${!hasFiles ? 'bottom-section--hidden' : ''}`}>
+        {/* Frosted glass backdrop with blur gradient - theme-aware */}
+        <div className="bottom-section__backdrop" />
 
-            <div className="bottom-section__container">
-              {/* Drawer Container - Behind buttons, grows upward with animation */}
-              <div
-                className={`drawer ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 ? 'drawer--open' : 'drawer--closed'}`}
-              >
-                <div className="drawer__content">
-                  <TargetFormatSelector disabled={isConverting} />
-                </div>
-              </div>
+        <div className="bottom-section__container">
+          {/* Drawer Container - Behind buttons, grows upward with animation */}
+          <div
+            className={`drawer ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 ? 'drawer--open' : 'drawer--closed'}`}
+          >
+            <div className="drawer__content">
+              <TargetFormatSelector disabled={isConverting} />
+            </div>
+          </div>
 
-              {/* Dynamic Button Container with smooth width sliding */}
-              <div className="button-container">
-                {/* Main Convert Button - Always present, width animates based on state */}
-                <motion.button
-                  layout
-                  animate={{
-                    width: allFilesConverted ? 0 : '100%',
-                    opacity: allFilesConverted ? 0 : 1,
-                    paddingLeft: allFilesConverted ? 0 : '1rem',
-                    paddingRight: allFilesConverted ? 0 : '1rem',
-                    paddingTop: allFilesConverted ? 0 : '1rem',
-                    paddingBottom: allFilesConverted ? 0 : '1rem',
-                    borderWidth: allFilesConverted ? 0 : 0,
-                    marginLeft: 0,
-                    marginRight: 0,
-                  }}
-                  transition={layoutTransition}
-                  onClick={() => {
-                    if (isConverting) {
-                      cancelConversion()
-                      addToast({
-                        type: 'info',
-                        message: 'Conversion cancelled',
-                      })
-                    } else if (!selectedTargetFormat && availableTargets.length > 0) {
-                      setIsDrawerOpen(!isDrawerOpen)
-                    } else {
-                      handleConvert()
-                      setIsDrawerOpen(false)
-                    }
-                  }}
-                  disabled={availableTargets.length === 0 && !isConverting}
-                  className={`btn-primary app-convert-btn ${
-                    availableTargets.length === 0 && !isConverting
-                      ? ''
-                      : isConverting
-                        ? 'btn-converting'
-                        : ''
-                  } ${allFilesConverted ? 'app-convert-btn--hidden' : 'app-convert-btn--visible'}`}
-                >
-                  {showProgressBackground && (
-                    <motion.div
-                      className="btn-progress-bg btn-progress-bg--converting"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${overallProgress}%` }}
-                      transition={{ duration: 0.3 }}
+          {/* Dynamic Button Container with smooth width sliding */}
+          <div className="button-container">
+            {/* Main Convert Button - Always present, width animates based on state */}
+            <motion.button
+              layout
+              animate={{
+                width: allFilesConverted ? 0 : '100%',
+                opacity: allFilesConverted ? 0 : 1,
+                paddingLeft: allFilesConverted ? 0 : '1rem',
+                paddingRight: allFilesConverted ? 0 : '1rem',
+                paddingTop: allFilesConverted ? 0 : '1rem',
+                paddingBottom: allFilesConverted ? 0 : '1rem',
+                borderWidth: allFilesConverted ? 0 : 0,
+                marginLeft: 0,
+                marginRight: 0,
+              }}
+              transition={layoutTransition}
+              onClick={() => {
+                if (isConverting) {
+                  cancelConversion()
+                  addToast({
+                    type: 'info',
+                    message: 'Conversion cancelled',
+                  })
+                } else if (!selectedTargetFormat && availableTargets.length > 0) {
+                  setIsDrawerOpen(!isDrawerOpen)
+                } else {
+                  handleConvert()
+                  setIsDrawerOpen(false)
+                }
+              }}
+              disabled={availableTargets.length === 0 && !isConverting}
+              className={`btn-primary app-convert-btn ${
+                availableTargets.length === 0 && !isConverting
+                  ? ''
+                  : isConverting
+                    ? 'btn-converting'
+                    : ''
+              } ${allFilesConverted ? 'app-convert-btn--hidden' : 'app-convert-btn--visible'}`}
+            >
+              {showProgressBackground && (
+                <motion.div
+                  className="btn-progress-bg btn-progress-bg--converting"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${overallProgress}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+              {isConverting ? (
+                <span className="btn-content">
+                  <svg
+                    className="btn-icon animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
                     />
-                  )}
-                  {isConverting ? (
-                    <span className="btn-content">
-                      <svg
-                        className="btn-icon animate-spin"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Converting... {Math.round(overallProgress)}%
-                    </span>
-                  ) : selectedTargetFormat ? (
-                    <span className="btn-content">
-                      <svg
-                        className="btn-icon"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      Convert
-                    </span>
-                  ) : (
-                    <span className="btn-content">
-                      <svg
-                        className="btn-icon"
-                        fill="currentColor"
-                        viewBox="0 -960 960 960"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M480-480ZM202-65l-56-57 118-118h-90v-80h226v226h-80v-89L202-65Zm278-15v-80h240v-440H520v-200H240v400h-80v-400q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H480Z" />
-                      </svg>
-                      Pick filetype
-                    </span>
-                  )}
-                </motion.button>
-
-                {/* Convert Again Button - Slides in from left when files completed */}
-                <motion.button
-                  layout
-                  animate={{
-                    width: allFilesConverted ? BUTTON_HEIGHT : 0,
-                    opacity: allFilesConverted ? 1 : 0,
-                    paddingLeft: allFilesConverted ? 0 : 0,
-                    paddingRight: allFilesConverted ? 0 : 0,
-                    paddingTop: allFilesConverted ? 0 : 0,
-                    paddingBottom: allFilesConverted ? 0 : 0,
-                    borderWidth: allFilesConverted ? 1 : 0,
-                    marginLeft: 0,
-                    marginRight: 0,
-                  }}
-                  transition={layoutTransition}
-                  onClick={() => {
-                    if (isConverting) {
-                      cancelConversion()
-                      addToast({
-                        type: 'info',
-                        message: 'Conversion cancelled',
-                      })
-                    } else {
-                      handleConvert()
-                    }
-                  }}
-                  disabled={!canConvert && !isConverting}
-                  className={`app-convert-again-btn ${allFilesConverted ? 'app-convert-again-btn--visible' : 'app-convert-again-btn--hidden'}`}
-                >
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Converting... {Math.round(overallProgress)}%
+                </span>
+              ) : selectedTargetFormat ? (
+                <span className="btn-content">
                   <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -519,110 +462,157 @@ export function App() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                </motion.button>
+                  Convert
+                </span>
+              ) : (
+                <span className="btn-content">
+                  <svg
+                    className="btn-icon"
+                    fill="currentColor"
+                    viewBox="0 -960 960 960"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M480-480ZM202-65l-56-57 118-118h-90v-80h226v226h-80v-89L202-65Zm278-15v-80h240v-440H520v-200H240v400h-80v-400q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H480Z" />
+                  </svg>
+                  Pick filetype
+                </span>
+              )}
+            </motion.button>
 
-                {/* Download Button - Slides in from right when files completed */}
-                <motion.button
-                  layout
-                  animate={{
-                    width: allFilesConverted ? 'auto' : 0,
-                    flexGrow: allFilesConverted ? 1 : 0,
-                    opacity: allFilesConverted ? 1 : 0,
-                    paddingLeft: allFilesConverted ? '1rem' : 0,
-                    paddingRight: allFilesConverted ? '1rem' : 0,
-                    paddingTop: allFilesConverted ? '1rem' : 0,
-                    paddingBottom: allFilesConverted ? '1rem' : 0,
-                    borderWidth: allFilesConverted ? 1 : 0,
-                    marginLeft: allFilesConverted ? '0.75rem' : 0,
-                    marginRight: 0,
-                  }}
-                  transition={layoutTransition}
-                  onClick={async () => {
-                    const completedFiles = files.filter(f => f.status === 'completed' && f.result)
-                    if (completedFiles.length === 0) return
+            {/* Convert Again Button - Slides in from left when files completed */}
+            <motion.button
+              layout
+              animate={{
+                width: allFilesConverted ? BUTTON_HEIGHT : 0,
+                opacity: allFilesConverted ? 1 : 0,
+                paddingLeft: allFilesConverted ? 0 : 0,
+                paddingRight: allFilesConverted ? 0 : 0,
+                paddingTop: allFilesConverted ? 0 : 0,
+                paddingBottom: allFilesConverted ? 0 : 0,
+                borderWidth: allFilesConverted ? 1 : 0,
+                marginLeft: 0,
+                marginRight: 0,
+              }}
+              transition={layoutTransition}
+              onClick={() => {
+                if (isConverting) {
+                  cancelConversion()
+                  addToast({
+                    type: 'info',
+                    message: 'Conversion cancelled',
+                  })
+                } else {
+                  handleConvert()
+                }
+              }}
+              disabled={!canConvert && !isConverting}
+              className={`app-convert-again-btn ${allFilesConverted ? 'app-convert-again-btn--visible' : 'app-convert-again-btn--hidden'}`}
+            >
+              <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </motion.button>
 
-                    const allResults = completedFiles.flatMap(f => f.result ?? [])
+            {/* Download Button - Slides in from right when files completed */}
+            <motion.button
+              layout
+              animate={{
+                width: allFilesConverted ? 'auto' : 0,
+                flexGrow: allFilesConverted ? 1 : 0,
+                opacity: allFilesConverted ? 1 : 0,
+                paddingLeft: allFilesConverted ? '1rem' : 0,
+                paddingRight: allFilesConverted ? '1rem' : 0,
+                paddingTop: allFilesConverted ? '1rem' : 0,
+                paddingBottom: allFilesConverted ? '1rem' : 0,
+                borderWidth: allFilesConverted ? 1 : 0,
+                marginLeft: allFilesConverted ? '0.75rem' : 0,
+                marginRight: 0,
+              }}
+              transition={layoutTransition}
+              onClick={async () => {
+                const completedFiles = files.filter(f => f.status === 'completed' && f.result)
+                if (completedFiles.length === 0) return
 
-                    try {
-                      setIsDownloading(true)
-                      setDownloadProgress(0)
+                const allResults = completedFiles.flatMap(f => f.result ?? [])
 
-                      await downloadFiles(allResults, 'auto', progress => {
-                        setDownloadProgress(progress)
-                      })
-                    } catch (error) {
-                      addToast({
-                        type: 'error',
-                        message: 'Download failed',
-                      })
-                    } finally {
-                      setIsDownloading(false)
-                      setDownloadProgress(0)
-                    }
-                  }}
-                  disabled={isDownloading}
-                  className={`btn-download app-download-btn ${allFilesConverted ? 'app-download-btn--visible' : 'app-download-btn--hidden'}`}
-                >
-                  {isDownloading && (
-                    <motion.div
-                      className="btn-progress-bg btn-progress-bg--downloading"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${downloadProgress}%` }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )}
-                  <span className="btn-content">
-                    {isDownloading ? (
-                      <>
-                        <svg
-                          className="btn-icon animate-spin"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Preparing...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="btn-icon"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                          />
-                        </svg>
-                        {files.filter(f => f.status === 'completed' && f.result).length === 1
-                          ? 'Download'
-                          : 'Download All'}
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-              </div>
-            </div>
+                try {
+                  setIsDownloading(true)
+                  setDownloadProgress(0)
+
+                  await downloadFiles(allResults, 'auto', progress => {
+                    setDownloadProgress(progress)
+                  })
+                } catch (error) {
+                  addToast({
+                    type: 'error',
+                    message: 'Download failed',
+                  })
+                } finally {
+                  setIsDownloading(false)
+                  setDownloadProgress(0)
+                }
+              }}
+              disabled={isDownloading}
+              className={`btn-download app-download-btn ${allFilesConverted ? 'app-download-btn--visible' : 'app-download-btn--hidden'}`}
+            >
+              {isDownloading && (
+                <motion.div
+                  className="btn-progress-bg btn-progress-bg--downloading"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${downloadProgress}%` }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
+              <span className="btn-content">
+                {isDownloading ? (
+                  <>
+                    <svg
+                      className="btn-icon animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Preparing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    {files.filter(f => f.status === 'completed' && f.result).length === 1
+                      ? 'Download'
+                      : 'Download All'}
+                  </>
+                )}
+              </span>
+            </motion.button>
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
       <Toast />
     </div>

@@ -1,0 +1,271 @@
+---
+description: 'Specification for file format conversion capabilities and the format registry system. Defines which formats can convert to which other formats.'
+alwaysApply: false
+alias: 'Format Registry, Conversion Matrix, File Formats'
+---
+
+# Format Conversion Matrix Specification
+
+## Overview
+
+The application supports comprehensive file format conversion across multiple categories. The format registry (`src/features/conversion/formatRegistry.ts`) defines all supported formats and their conversion capabilities.
+
+## Universal Conversion Rule
+
+**All image formats can convert to all other image formats.**
+
+This provides maximum flexibility for users and eliminates confusion about which conversions are supported.
+
+## Supported Format Categories
+
+### Image Formats
+
+All image formats use native browser APIs (Canvas/ImageBitmap) for conversion.
+
+**Supported Formats:**
+
+- PNG (Portable Network Graphics)
+- ICO (Windows Icon)
+- JPEG (Joint Photographic Experts Group)
+- JPG (JPEG alias)
+- WebP (Web Picture format)
+- GIF (Graphics Interchange Format)
+- BMP (Bitmap)
+- TIFF (Tagged Image File Format)
+- AVIF (AV1 Image File Format)
+- HEIC (High Efficiency Image Container)
+
+**Conversion Matrix:**
+Every image format can convert to every other image format (excluding self-conversion).
+
+**Implementation:**
+
+```typescript
+const ALL_IMAGE_FORMATS: FormatId[] = [
+  'png',
+  'ico',
+  'jpeg',
+  'jpg',
+  'webp',
+  'gif',
+  'bmp',
+  'tiff',
+  'avif',
+  'heic',
+]
+
+// Each format's canConvertTo excludes only itself
+canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'currentFormat')
+```
+
+### Audio Formats
+
+All audio formats use bundled encoding libraries (lamejs, wasm-media-encoders) and browser APIs.
+
+**Supported Formats:**
+
+- MP3 (MPEG Audio Layer 3)
+- WAV (Waveform Audio)
+- FLAC (Free Lossless Audio Codec)
+- OGG (Ogg Vorbis)
+- AAC (Advanced Audio Coding)
+- M4A (MPEG-4 Audio)
+
+**Conversion Matrix:**
+Every audio format can convert to every other audio format (including self-conversion for re-encoding).
+
+**Note:** Some formats may fall back to more compatible alternatives if the browser doesn't support encoding:
+
+- FLAC → Falls back to WAV if unsupported
+- AAC → Falls back to MP3 if unsupported
+- M4A → Falls back to MP3 if unsupported
+
+## Format Detection
+
+### MIME Type Mapping
+
+Formats are detected using:
+
+1. **File signatures** (magic bytes) - Primary method
+2. **MIME types** - Fallback method
+3. **File extensions** - User-facing only
+
+### Signature-Based Detection
+
+Each format defines byte signatures for reliable detection:
+
+```typescript
+interface FormatSignature {
+  offset: number // Position in file where bytes should match
+  bytes: number[] // Expected byte values
+}
+```
+
+**Example - PNG Detection:**
+
+```typescript
+signatures: [
+  {
+    offset: 0,
+    bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  },
+]
+```
+
+## Common Denominator Calculation
+
+When multiple files are loaded, the system calculates **common target formats** - formats that ALL loaded files can convert to.
+
+**Algorithm:**
+
+1. Detect source format for each file
+2. Get `canConvertTo` array for each source format
+3. Calculate intersection of all `canConvertTo` arrays
+4. Result: Only formats that ALL files can convert to
+
+**Example:**
+
+- File 1: PNG (can convert to: ico, jpeg, jpg, webp, gif, bmp, tiff, avif, heic)
+- File 2: JPEG (can convert to: png, ico, jpg, webp, gif, bmp, tiff, avif, heic)
+- **Common targets:** ico, jpg, webp, gif, bmp, tiff, avif, heic (8 formats)
+
+**Mixed Categories:**
+If loading both images and audio files:
+
+- Image formats can only convert to images
+- Audio formats can only convert to audio
+- Common targets = empty set (no formats available)
+- UI shows "No common format available" error
+
+## Format Registry API
+
+### Core Functions
+
+**`getFormat(id: FormatId): Capability | undefined`**
+Get format capability by ID.
+
+**`getAllFormatIds(): FormatId[]`**
+Get array of all supported format IDs.
+
+**`getFormatLabel(id: FormatId): string`**
+Get human-readable label for a format.
+
+**`getFormatsByCategory(category): Capability[]`**
+Get all formats in a specific category.
+
+### Capability Interface
+
+```typescript
+interface Capability {
+  id: FormatId // Unique format identifier
+  label: string // Human-readable name
+  mime: string[] // MIME type(s)
+  signatures: FormatSignature[] // Detection signatures
+  canConvertTo: FormatId[] // Target formats
+  category: 'icon' | 'photo' | 'audio' | 'vector' | 'document'
+}
+```
+
+## Adding New Formats
+
+To add a new format:
+
+1. **Add to FormatId type:**
+
+```typescript
+export type FormatId =
+  | 'png'
+  | 'jpeg'
+  | 'jpg' // ... existing
+  | 'newformat' // Add here
+```
+
+2. **Add format constant if creating new category:**
+
+```typescript
+const ALL_NEW_CATEGORY: FormatId[] = ['format1', 'format2', 'newformat']
+```
+
+3. **Add to FORMATS array:**
+
+```typescript
+{
+  id: 'newformat',
+  label: 'New Format',
+  mime: ['image/newformat'],
+  signatures: [{ offset: 0, bytes: [0x00, 0x01] }],
+  canConvertTo: ALL_IMAGE_FORMATS.filter(f => f !== 'newformat'),
+  category: 'photo'
+}
+```
+
+4. **Update format descriptions** in `TargetFormatSelector.tsx`:
+
+```typescript
+const FORMAT_DESCRIPTIONS: Record<FormatId, string> = {
+  newformat: 'New Format - Description here',
+  // ...
+}
+```
+
+5. **Update file input accept attribute** in `App.tsx`:
+
+```tsx
+accept = '.png,.jpg,...,.newformat'
+```
+
+## Browser Compatibility
+
+### Image Conversion
+
+- **PNG, JPEG, WebP, BMP**: Universal browser support
+- **AVIF**: Modern browsers only (Chrome 85+, Firefox 93+)
+- **HEIC**: Limited support, requires polyfill
+- **TIFF**: Canvas decoding, not all browsers
+- **ICO**: Special handling for multi-resolution
+
+### Audio Conversion
+
+- **MP3**: Universal support (lamejs fallback)
+- **WAV**: Universal support (native)
+- **OGG**: Universal support (wasm-media-encoders)
+- **FLAC**: Modern browsers (falls back to WAV)
+- **AAC**: Limited support (falls back to MP3)
+- **M4A**: Limited support (falls back to MP3)
+
+## Testing Checklist
+
+### Format Detection
+
+- [ ] Each format correctly detected by signature
+- [ ] MIME type fallback works for formats without clear signatures
+- [ ] Mixed case file extensions handled correctly
+
+### Image Conversions
+
+- [ ] PNG can convert to all other image formats
+- [ ] ICO can convert to all other image formats (including JPEG, TIFF, etc.)
+- [ ] JPEG and JPG treated as interchangeable
+- [ ] All image formats display in drawer when image file loaded
+
+### Audio Conversions
+
+- [ ] All audio formats can convert to all other audio formats
+- [ ] Fallback encoders activate when native encoding unavailable
+- [ ] Audio quality warnings display for transcoding scenarios
+
+### Common Denominators
+
+- [ ] Single file: Shows all compatible target formats
+- [ ] Multiple files (same type): Shows intersection of targets
+- [ ] Multiple images: Shows all image formats (universal conversion)
+- [ ] Multiple audio: Shows all audio formats
+- [ ] Mixed image + audio: Shows "No common format" error
+- [ ] Format selector auto-updates when files added/removed
+
+### Edge Cases
+
+- [ ] Empty file list: No formats shown, button disabled
+- [ ] Corrupted file: Graceful error, other files unaffected
+- [ ] Unknown format: Shows error, doesn't break app
+- [ ] Very large file: Conversion works or shows memory warning

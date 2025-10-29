@@ -27,6 +27,11 @@
   outline: none;
 }
 
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .btn-primary:disabled {
   background-color: #9ca3af;
   color: #6b7280;
@@ -71,6 +76,11 @@
   outline: none;
 }
 
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* Download button */
 .btn-download {
   border-radius: 9999px;
@@ -93,6 +103,11 @@
 
 .btn-download:focus {
   outline: none;
+}
+
+.btn-download:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .btn-download:disabled {

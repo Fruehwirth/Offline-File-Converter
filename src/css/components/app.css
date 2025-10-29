@@ -69,6 +69,11 @@
   outline: none;
 }
 
+.app-convert-again-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .app-convert-again-btn:disabled {
   cursor: not-allowed;
 }

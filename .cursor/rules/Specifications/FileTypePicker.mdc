@@ -101,14 +101,58 @@ disabled={!canConvert && !isConverting && (!availableTargets.length || selectedT
 
 ### Drawer Animation
 
-```tsx
-className={`
-  absolute left-0 right-0 bottom-0 z-10
-  transition-all duration-300 ease-out overflow-hidden origin-bottom
-  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0
-    ? 'max-h-[500px] pointer-events-auto'
-    : 'max-h-0 pointer-events-none'}
-`}
+**CSS Implementation** (see `src/css/layout/drawer.css`):
+
+```css
+.drawer__content {
+  background-color: var(--color-bg-secondary);
+  border-top-left-radius: 36px;
+  border-top-right-radius: 36px;
+  margin-bottom: 36px; /* ALWAYS 36px - keeps drawer centered on button */
+  padding: 1rem; /* ALWAYS 1rem - never animates to prevent width changes! */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.drawer--closed .drawer__content {
+  max-height: 0;
+  border-width: 0;
+  border-color: transparent; /* Border fades to transparent, not white */
+  box-shadow: none;
+  overflow: hidden;
+  visibility: hidden; /* Completely hidden behind buttons */
+  transition:
+    max-height 300ms ease-out,
+    border-width 300ms ease-out,
+    border-color 300ms ease-out,
+    visibility 0s 300ms; /* Delayed - stays visible during closing animation */
+}
+
+.drawer--open .drawer__content {
+  max-height: 600px; /* Dynamic - accommodates 2+ rows */
+  border-width: 1px;
+  border-color: var(--color-border);
+  border-style: solid;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+  overflow-x: hidden;
+  visibility: visible;
+  transition:
+    max-height 300ms ease-out,
+    border-width 300ms ease-out,
+    border-color 300ms ease-out,
+    visibility 0s 0s; /* Immediate when opening */
+  /* Hide scrollbar while keeping content scrollable */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Hide scrollbar for Chrome/Safari/Opera */
+.drawer--open .drawer__content::-webkit-scrollbar {
+  display: none;
+}
 ```
 
 **Positioning**:
@@ -116,9 +160,32 @@ className={`
 - **Behind buttons**: `z-10` (buttons are z-20)
 - **Bottom-aligned**: `bottom-0` with container margins
 - **Grows upward**: Drawer expands vertically from bottom when opened
+- **Centered on button**: `margin-bottom: 36px` (half of 72px button height)
+
+**Dynamic Height**:
+
+- **2 rows of formats**: ~220px height (fits comfortably)
+- **3+ rows of formats**: Expands up to 600px with scrolling
 - Uses `max-height` transition (not height) for smooth animation
-- `origin-bottom` ensures animation starts from bottom edge
-- `overflow-hidden` prevents content from showing during collapse
+- `overflow-y: auto` enables scrolling for many formats
+- `overflow-x: hidden` prevents horizontal scroll
+
+**Layout Stability**:
+
+- `display: flex; flex-direction: column` establishes stable layout
+- `padding` and `margin-bottom` are **ALWAYS constant** (never animated) to prevent width/position changes
+- Content stays aligned at top during animation
+- No jumping or shifting of format buttons
+- Drawer and button container use `left: 1rem; right: 1rem` to respect container padding
+
+**Smooth Transitions**:
+
+- **max-height**: 300ms ease-out (drawer expansion from 0 to 600px)
+- **border-width**: 300ms ease-out (border only visible when open)
+- **border-color**: 300ms ease-out (fades to transparent when closing, prevents white flash)
+- **visibility**: Delayed on close (0s delay with 300ms wait) to stay visible during animation
+- **NO opacity animation** - only slide animation for a clean, modern feel
+- **NO padding animation** - always 1rem to prevent width changes during animation
 
 **Interaction**:
 
@@ -130,7 +197,8 @@ className={`
 
 - Drawer grows behind the button system
 - Button system (z-20) always stays on top
-- Smooth 300ms transition matches button animations
+- Lower edge of drawer stays perfectly centered on main button (36px = half of 72px)
+- Border only visible when drawer is open (0px when closed)
 
 ### Auto-Close on Selection
 
@@ -143,6 +211,69 @@ useEffect(() => {
 ```
 
 Automatically closes drawer when user selects a format, providing seamless UX.
+
+### Bottom Section Slide Animation
+
+The entire bottom section (drawer + buttons) slides out of view when no files are present:
+
+**CSS Implementation** (see `src/css/layout/drawer.css`):
+
+```css
+.bottom-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-bottom: 1rem;
+  transition: bottom 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hidden state - slides down out of view */
+.bottom-section--hidden {
+  bottom: -200px;
+}
+```
+
+**Key Points**:
+
+- Uses `bottom` property animation (NOT `transform`) to avoid layout issues with absolutely positioned children
+- Animates to `bottom: -200px` when hidden (completely out of view)
+- 400ms transition with easing for smooth, satisfying slide
+- Entire section maintains width and height during animation
+- Applied when `!hasFiles` in App.tsx
+
+### Focus Styles (Accessibility)
+
+All interactive buttons remove the default browser outline while maintaining keyboard accessibility:
+
+**CSS Pattern**:
+
+```css
+.btn-primary:focus {
+  outline: none; /* Removes white border on click */
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+```
+
+**Applied to**:
+
+- `.btn-primary` (main Convert button)
+- `.btn-secondary` (general secondary buttons)
+- `.btn-download` (Download button)
+- `.app-convert-again-btn` (Convert Again icon button)
+- Format picker buttons (inline `style={{ outline: 'none' }}`)
+
+**Rationale**:
+
+- `:focus` removes outline on mouse click (cleaner UI)
+- `:focus-visible` adds accent outline for keyboard navigation (accessibility)
+- No white border flash on button clicks
+- Keyboard users still get clear focus indicators
 
 ## Visual Design
 
@@ -225,6 +356,13 @@ The "Add More Files" button is rendered **inside** `FileList.tsx` at the end of 
 6. **Animation Conflicts**: Drawer 300ms transition must not conflict with button width animations
 7. **Transparency Issues**: Use solid colors, not alpha values (except for dark mode overlays)
 8. **Border Radius**: Use `rounded-[36px]` for drawer, `rounded-full` for buttons (pill-shaped)
+9. **Content Jumping During Animation**: Animating `padding` causes width changes. Keep padding constant (always 1rem) and only animate `max-height`.
+10. **Border Visible When Closed**: Border must animate to `border-width: 0` AND `border-color: transparent` to prevent white flash during closing
+11. **Visibility Animation Timing**: `visibility` must be delayed on close (`0s 300ms`) to stay visible during animation, but immediate on open (`0s 0s`)
+12. **Transform Positioning Issues**: Use `bottom` property animation for bottom section, NOT `transform`, to avoid layout issues with absolutely positioned children
+13. **White Border on Click**: Use `:focus { outline: none; }` and `:focus-visible` pattern for accessible focus styling without white border flash
+14. **Scrollbar Visibility**: Hide scrollbar with `scrollbar-width: none`, `-ms-overflow-style: none`, and `::-webkit-scrollbar { display: none; }`
+15. **Drawer Position Misalignment**: Drawer and button container must use `left: 1rem; right: 1rem` to align with container padding
 
 ## Testing Checklist
 
@@ -237,6 +375,22 @@ The "Add More Files" button is rendered **inside** `FileList.tsx` at the end of 
 - [ ] Click format in drawer → Drawer auto-closes smoothly
 - [ ] Button changes to "Convert" with icon after selection
 - [ ] Click "Cancel" in drawer → Drawer closes, no format selected
+- [ ] Content stays aligned during drawer animation (no jumping or horizontal wiggling)
+- [ ] With 2 rows of formats: drawer fits perfectly without scrolling
+- [ ] With 3+ rows of formats: drawer expands and enables vertical scrolling
+- [ ] Scrollbar is invisible but content is still scrollable
+- [ ] Border only visible when drawer is open (hidden at 0px height)
+- [ ] Border fades to transparent during close (no white flash)
+- [ ] Drawer stays visible during entire closing animation
+- [ ] Drawer is completely hidden behind buttons when closed (not partially visible through gap)
+
+### Bottom Section Animation
+
+- [ ] No files present → Bottom section completely hidden (slid down out of view)
+- [ ] Add files → Bottom section slides up smoothly with 400ms transition
+- [ ] Section maintains width and height during slide animation
+- [ ] No layout shift in file list when section appears/disappears
+- [ ] Remove all files → Section slides back down smoothly
 
 ### Button System Integration
 
@@ -247,6 +401,8 @@ The "Add More Files" button is rendered **inside** `FileList.tsx` at the end of 
 - [ ] Download button slides in (fills remaining space)
 - [ ] All buttons maintain 72px height at all times
 - [ ] Buttons never shrink/compress - overflow clips if needed
+- [ ] No white border flash when clicking any button
+- [ ] Keyboard focus shows accent outline (accessibility)
 
 ### Visual Design
 
