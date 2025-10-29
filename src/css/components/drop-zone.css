@@ -1,0 +1,22 @@
+/**
+ * Drop zone component styles
+ * Compact drop zone for adding more files
+ */
+
+.drop-zone {
+  cursor: pointer;
+}
+
+.drop-zone--disabled {
+  cursor: not-allowed;
+  border-color: transparent !important;
+}
+
+.drop-zone__border-overlay {
+  position: absolute;
+  inset: 0;
+  border: 2px dashed var(--color-border, #e5e7eb);
+  border-radius: var(--border-radius-brand, 0.5rem);
+  opacity: 0.3;
+  pointer-events: none;
+}

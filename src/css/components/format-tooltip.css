@@ -1,0 +1,25 @@
+/**
+ * Format tooltip styles
+ * Tooltip for format icons with glassy backdrop blur effect
+ */
+
+.format-tooltip {
+  position: absolute;
+  top: 6rem; /* top-24 */
+  z-index: 10;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-brand);
+  box-shadow: var(--shadow-lg);
+  padding: 1rem;
+  min-width: 200px;
+  max-width: 280px;
+  background-color: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.format-tooltip__icon {
+  image-rendering: crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+}

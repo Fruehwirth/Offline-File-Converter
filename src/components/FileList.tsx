@@ -144,10 +144,9 @@ function FileThumbnail({ file }: { file: File }) {
         <img
           src={thumbnailUrl || ''}
           alt=""
-          className="w-full h-full object-cover rounded-lg"
+          className={`w-full h-full object-cover rounded-lg ${isLoading ? 'thumbnail__image--loading' : 'thumbnail__image'}`}
           onError={() => setHasError(true)}
           onLoad={() => setIsLoading(false)}
-          style={{ display: isLoading ? 'none' : 'block' }}
         />
       </>
     )
@@ -182,11 +181,10 @@ function FileThumbnail({ file }: { file: File }) {
         )}
         <video
           src={thumbnailUrl}
-          className="w-full h-full object-cover rounded-lg"
+          className={`w-full h-full object-cover rounded-lg ${isLoading ? 'thumbnail__video--loading' : 'thumbnail__video'}`}
           muted
           onError={() => setHasError(true)}
           onLoadedData={() => setIsLoading(false)}
-          style={{ display: isLoading ? 'none' : 'block' }}
         />
       </>
     )
@@ -249,17 +247,6 @@ export function FileList({ onAddFiles }: FileListProps) {
           </div>
         </button>
       )}
-
-      <style>{`
-        @keyframes fadeIn {
-          0% {
-            opacity: 0;
-          }
-          100% {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   )
 }
@@ -284,6 +271,7 @@ function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
   return (
     <div
       className={`
+        file-list-item
         p-4 rounded-brand border transition-colors relative overflow-hidden
         ${
           hasError
@@ -291,26 +279,26 @@ function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
             : 'border-brand-border bg-brand-bg-secondary hover:bg-brand-bg-hover'
         }
       `}
-      style={{ minHeight: '40px' }}
     >
       {/* Progress background overlay with smooth animation */}
       {(file.status === 'processing' || file.status === 'completed') && (
         <div
-          className="absolute inset-0 bg-blue-400/20 dark:bg-blue-500/20 transition-opacity duration-300"
-          style={{
-            width: `${displayProgress}%`,
-            transition: 'none', // We handle animation with React state
-          }}
+          className="file-list-item__progress"
+          style={
+            {
+              '--progress-width': `${displayProgress}%`,
+            } as React.CSSProperties
+          }
         />
       )}
       <div className="flex items-center gap-3 relative z-10 min-w-0">
         {/* Thumbnail Preview */}
         <div
           className={`
+          thumbnail
           flex-shrink-0 flex items-center justify-center overflow-hidden rounded-lg relative
           ${hasError ? 'w-12 h-12 bg-red-100 dark:bg-red-900/30' : 'w-12 h-12 bg-brand-accent/5'}
         `}
-          style={{ maxWidth: '80px', maxHeight: '80px' }}
         >
           {hasError ? (
             <svg
@@ -354,14 +342,13 @@ function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
                 <button
                   onClick={handleDownload}
                   className="
+                    file-list-item__action-download
                     p-2 rounded
                     text-brand-text-secondary hover:text-brand-success
                     transition-colors
-                    animate-fadeIn
                   "
                   aria-label="Download converted file"
                   title="Download"
-                  style={{ animation: 'fadeIn 0.5s ease-in forwards' }}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path

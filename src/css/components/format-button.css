@@ -1,0 +1,40 @@
+/**
+ * Format selector button styles
+ */
+
+.format-button {
+  outline: none;
+  position: relative;
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  border: 2px solid;
+  font-weight: 500;
+  min-width: 80px;
+  transition: all 0.2s ease-in-out;
+}
+
+.format-button--selected {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.format-button--selected:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.format-button--unselected {
+  background-color: rgb(243 244 246);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  .format-button--unselected {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.format-button--unselected:hover {
+  border-color: rgba(var(--color-accent-rgb), 0.5);
+}

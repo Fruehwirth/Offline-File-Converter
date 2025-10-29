@@ -109,16 +109,12 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
             <button
               key={format}
               onClick={() => handleFormatClick(format)}
-              style={{
-                outline: 'none',
-              }}
               className={`
-                relative px-6 py-2 rounded-brand border-2 font-medium min-w-[80px]
-                transition-all
+                format-button
                 ${
                   selectedTargetFormat === format
-                    ? 'bg-brand-accent hover:bg-brand-accent-hover border-brand-accent text-white'
-                    : 'bg-gray-100 dark:bg-black/20 border-brand-border text-brand-text hover:border-brand-accent/50'
+                    ? 'format-button--selected'
+                    : 'format-button--unselected'
                 }
               `}
               aria-pressed={selectedTargetFormat === format}

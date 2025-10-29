@@ -71,13 +71,12 @@ export function DropZone({ disabled = false }: DropZoneProps) {
           transition-all relative bg-gray-100 dark:bg-black/20
           ${
             disabled
-              ? 'cursor-not-allowed border-brand-border'
+              ? 'drop-zone--disabled'
               : isDragging
-                ? 'border-brand-accent bg-brand-accent/5 cursor-pointer'
-                : 'border-brand-border hover:border-brand-accent/50 hover:bg-gray-200 dark:hover:bg-black/30 cursor-pointer'
+                ? 'border-brand-accent bg-brand-accent/5 drop-zone'
+                : 'border-brand-border hover:border-brand-accent/50 hover:bg-gray-200 dark:hover:bg-black/30 drop-zone'
           }
         `}
-        style={disabled ? { borderColor: 'transparent' } : undefined}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -105,15 +104,7 @@ export function DropZone({ disabled = false }: DropZoneProps) {
         />
 
         {/* Faded border overlay when disabled */}
-        {disabled && (
-          <div
-            className="absolute inset-0 border-2 border-dashed rounded-brand pointer-events-none"
-            style={{
-              borderColor: 'var(--color-border, #e5e7eb)',
-              opacity: 0.3,
-            }}
-          />
-        )}
+        {disabled && <div className="drop-zone__border-overlay" />}
 
         <div
           className={`flex items-center gap-4 pointer-events-none transition-opacity relative z-10 ${disabled ? 'opacity-40' : 'opacity-100'}`}

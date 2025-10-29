@@ -57,17 +57,14 @@ export function AnimatedFilename({
         className="inline-block align-bottom truncate"
         style={{
           maxWidth: `calc(100% - ${extensionSpace})`,
-          verticalAlign: 'bottom',
         }}
       >
         {isConverted ? converted.basename : original.basename}
       </span>
       {displayExtension && (
         <>
-          <span className="inline-block align-bottom" style={{ verticalAlign: 'bottom' }}>
-            .
-          </span>
-          <span className="inline-block relative align-bottom" style={{ verticalAlign: 'bottom' }}>
+          <span className="inline-block align-bottom">.</span>
+          <span className="inline-block relative align-bottom">
             {isAnimating ? (
               <>
                 {/* Old extension falling down */}

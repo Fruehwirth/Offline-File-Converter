@@ -1,14 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif']
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'sans-serif',
+        ],
       },
       colors: {
         brand: {
@@ -22,15 +28,14 @@ export default {
           'accent-hover': 'var(--color-accent-hover)',
           success: 'var(--color-success)',
           error: 'var(--color-error)',
-          warning: 'var(--color-warning)'
-        }
+          warning: 'var(--color-warning)',
+        },
       },
       borderRadius: {
         brand: 'var(--radius)',
-        'brand-lg': 'var(--radius-lg)'
-      }
+        'brand-lg': 'var(--radius-lg)',
+      },
     },
   },
   plugins: [],
 }
-

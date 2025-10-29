@@ -1,0 +1,19 @@
+/**
+ * Thumbnail component styles
+ * File thumbnail preview
+ */
+
+.thumbnail {
+  max-width: 80px;
+  max-height: 80px;
+}
+
+.thumbnail__image,
+.thumbnail__video {
+  display: block;
+}
+
+.thumbnail__image--loading,
+.thumbnail__video--loading {
+  display: none;
+}

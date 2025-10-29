@@ -1,0 +1,25 @@
+/**
+ * File list item component styles
+ */
+
+.file-list-item {
+  min-height: 40px;
+}
+
+.file-list-item__progress {
+  position: absolute;
+  inset: 0;
+  width: var(--progress-width, 0%);
+  background-color: rgb(96 165 250 / 0.2);
+  transition: none; /* Animated via React state */
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-list-item__progress {
+    background-color: rgb(59 130 246 / 0.2);
+  }
+}
+
+.file-list-item__action-download {
+  animation: fadeIn 0.5s ease-in forwards;
+}

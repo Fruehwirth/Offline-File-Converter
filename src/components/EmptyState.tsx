@@ -60,6 +60,7 @@ export function EmptyState() {
     <div className="flex justify-center items-center w-full">
       <div
         className={`
+          drop-zone
           flex flex-col items-center justify-center min-h-[400px] text-center px-4
           md:border-2 md:border-dashed md:rounded-brand-lg md:p-8 transition-colors
           w-full min-w-[280px] max-w-[700px]
@@ -75,7 +76,6 @@ export function EmptyState() {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={handleClick}
-        style={{ cursor: 'pointer' }}
       >
         <input
           ref={inputRef}
@@ -99,20 +99,12 @@ export function EmptyState() {
               <img
                 src={imageIcon}
                 alt="Image formats"
-                className="w-full h-full object-contain"
-                style={{ imageRendering: 'crisp-edges' }}
+                className="w-full h-full object-contain format-tooltip__icon"
               />
             </div>
             {/* Tooltip */}
             {hoveredIcon === 'image' && (
-              <div
-                className="absolute top-24 z-10 border-2 border-brand-border rounded-brand shadow-lg p-4 min-w-[200px] max-w-[280px]"
-                style={{
-                  backgroundColor: 'rgba(30, 30, 30, 0.75)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                }}
-              >
+              <div className="format-tooltip">
                 <div className="flex flex-wrap gap-1">
                   {imageFormats.map(format => (
                     <div
@@ -137,20 +129,12 @@ export function EmptyState() {
               <img
                 src={audioIcon}
                 alt="Audio formats"
-                className="w-full h-full object-contain"
-                style={{ imageRendering: 'crisp-edges' }}
+                className="w-full h-full object-contain format-tooltip__icon"
               />
             </div>
             {/* Tooltip */}
             {hoveredIcon === 'audio' && (
-              <div
-                className="absolute top-24 z-10 border-2 border-brand-border rounded-brand shadow-lg p-4 min-w-[200px] max-w-[280px]"
-                style={{
-                  backgroundColor: 'rgba(30, 30, 30, 0.75)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                }}
-              >
+              <div className="format-tooltip">
                 <div className="flex flex-wrap gap-1">
                   {audioFormats.map(format => (
                     <div

@@ -255,36 +255,18 @@ export function AudioPreviewIcon({ file }: AudioPreviewIconProps) {
 
   return (
     <div
-      className="relative w-full h-full cursor-pointer"
+      className="flip-card relative w-full h-full cursor-pointer"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      style={{ perspective: '1000px' }}
     >
-      <div
-        className="relative w-full h-full transition-transform duration-500 ease-out"
-        style={{
-          transformStyle: 'preserve-3d',
-          transform: isHovering ? 'rotateY(180deg)' : 'rotateY(0deg)',
-        }}
-      >
+      <div className={`flip-card__inner ${isHovering ? 'flip-card__inner--flipped' : ''}`}>
         {/* Front side - Audio icon */}
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{
-            backfaceVisibility: 'hidden',
-          }}
-        >
+        <div className="flip-card__face">
           <FileTypeIcon file={file} />
         </div>
 
         {/* Back side - Playing indicator with real-time waveform */}
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-          }}
-        >
+        <div className="flip-card__face flip-card__face--back">
           <div className="w-full h-full flex items-center justify-center bg-brand-accent/10 rounded-lg">
             {/* Real-time audio waveform visualization - 7 bars */}
             <div className="flex items-center justify-center gap-0.5">
@@ -297,10 +279,12 @@ export function AudioPreviewIcon({ file }: AudioPreviewIconProps) {
                 return (
                   <div
                     key={index}
-                    className="w-1 bg-brand-accent rounded-full transition-all duration-75 ease-out"
-                    style={{
-                      height: `${height}px`,
-                    }}
+                    className="waveform-bar"
+                    style={
+                      {
+                        '--bar-height': `${height}px`,
+                      } as React.CSSProperties
+                    }
                   />
                 )
               })}

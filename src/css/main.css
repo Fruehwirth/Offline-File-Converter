@@ -24,6 +24,7 @@
 @import './components/header.css';
 @import './components/empty-state.css';
 @import './components/file-list.css';
+@import './components/file-list-item.css';
 @import './components/target-format-selector.css';
 @import './components/toast.css';
 @import './components/settings-modal.css';
@@ -32,3 +33,8 @@
 @import './components/animated-format-label.css';
 @import './components/file-type-icon.css';
 @import './components/audio-preview-icon.css';
+@import './components/drop-zone.css';
+@import './components/format-tooltip.css';
+@import './components/thumbnail.css';
+@import './components/flip-card.css';
+@import './components/format-button.css';

@@ -47,64 +47,22 @@ export function AnimatedFormatLabel({
   const displayLabel = getFormatLabel(displayFormat)
 
   return (
-    <span className="inline-block relative">
+    <span className="animated-format-label">
       {isAnimating && sourceFormat && targetFormat ? (
         <>
           {/* Old label falling down */}
-          <span
-            className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block whitespace-nowrap"
-            style={{
-              animation: 'fallDown 0.2s ease-in forwards',
-              minWidth: '150px',
-            }}
-          >
+          <span className="animated-format-label__badge animated-format-label__badge--old">
             {getFormatLabel(sourceFormat)}
           </span>
 
           {/* New label falling in from above */}
-          <span
-            className="absolute left-0 top-0 px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent inline-block whitespace-nowrap"
-            style={{
-              animation: 'fallIn 0.2s ease-out forwards',
-              opacity: 0,
-              minWidth: '150px',
-            }}
-          >
+          <span className="animated-format-label__badge animated-format-label__badge--new">
             {getFormatLabel(targetFormat)}
           </span>
         </>
       ) : (
-        <span
-          className="px-2 py-0.5 rounded bg-brand-accent/10 text-brand-accent whitespace-nowrap"
-          style={{ minWidth: '150px' }}
-        >
-          {displayLabel}
-        </span>
+        <span className="animated-format-label__badge">{displayLabel}</span>
       )}
-
-      <style>{`
-        @keyframes fallDown {
-          0% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-        }
-
-        @keyframes fallIn {
-          0% {
-            transform: translateY(-20px);
-            opacity: 0;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </span>
   )
 }
