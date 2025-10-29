@@ -1,0 +1,191 @@
+/**
+ * Empty State Component Styles
+ * Initial screen when no files are loaded
+ */
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.empty-state__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  padding: 1rem;
+  transition: colors 150ms ease-in-out;
+  width: 100%;
+  min-width: 280px;
+  max-width: 700px;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .empty-state__dropzone {
+    border-width: 2px;
+    border-style: dashed;
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    background-color: #f3f4f6;
+  }
+
+  [data-theme='dark'] .empty-state__dropzone {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .empty-state__dropzone:hover {
+    background-color: #e5e7eb;
+  }
+
+  [data-theme='dark'] .empty-state__dropzone:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .empty-state__dropzone {
+    border-color: var(--color-border);
+  }
+
+  .empty-state__dropzone:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+}
+
+.empty-state__dropzone--dragging {
+  border-color: var(--color-accent) !important;
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* Format icons section */
+.empty-state__icons {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.empty-state__icon-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-state__icon {
+  width: 5rem;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease-in-out;
+}
+
+.empty-state__icon:hover {
+  transform: scale(1.1);
+}
+
+.empty-state__icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: crisp-edges;
+}
+
+/* Tooltip */
+.empty-state__tooltip {
+  position: absolute;
+  top: 6rem;
+  z-index: 10;
+  border-width: 2px;
+  border-color: var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 1rem;
+  min-width: 200px;
+  max-width: 280px;
+  background-color: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.empty-state__tooltip-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.empty-state__tooltip-format {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  padding: 0.25rem 0.5rem;
+  flex: 1;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Text content */
+.empty-state__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state__description {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 1.5rem;
+  max-width: 28rem;
+}
+
+/* Select files button */
+.empty-state__button {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  background-color: var(--color-accent);
+  color: white;
+  font-weight: 500;
+  transition: background-color 150ms ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.empty-state__button:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.empty-state__button:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-accent);
+}
+
+.empty-state__button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Privacy notice */
+.empty-state__notice {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.empty-state__notice-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-success);
+}

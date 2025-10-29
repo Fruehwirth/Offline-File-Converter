@@ -88,12 +88,7 @@ export function FileTypeIcon({ file, className = '' }: FileTypeIconProps) {
   const iconSrc = getCategoryIcon(category)
 
   return (
-    <img
-      src={iconSrc}
-      alt={`${category} file icon`}
-      className={`w-full h-full object-contain ${className}`}
-      style={{ imageRendering: 'crisp-edges' }}
-    />
+    <img src={iconSrc} alt={`${category} file icon`} className={`file-type-icon ${className}`} />
   )
 }
 

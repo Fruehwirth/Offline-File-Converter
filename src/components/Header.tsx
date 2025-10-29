@@ -10,10 +10,6 @@ interface HeaderProps {
   showFilesHeader?: boolean
 }
 
-// Match the same constants as App.tsx
-const CONTAINER_MAX_WIDTH = '630px'
-const CONTAINER_PADDING = '1rem'
-
 export function Header({ showFilesHeader = false }: HeaderProps) {
   const files = useConversionStore(state => state.files)
   const clearFiles = useConversionStore(state => state.clearFiles)
@@ -23,33 +19,18 @@ export function Header({ showFilesHeader = false }: HeaderProps) {
   const processingCount = files.filter(f => f.status === 'processing').length
 
   return (
-    <header className="sticky top-0 z-40 relative">
+    <header className="header">
       {/* Frosted glass background with fade-out - theme-aware */}
-      <div
-        className="absolute inset-0 bg-brand-bg/75"
-        style={{
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-        }}
-      />
+      <div className="header__backdrop" />
 
       {/* Content - using same container system as rest of app */}
-      <div
-        className="relative z-10 mx-auto"
-        style={{
-          maxWidth: CONTAINER_MAX_WIDTH,
-          paddingLeft: CONTAINER_PADDING,
-          paddingRight: CONTAINER_PADDING,
-        }}
-      >
+      <div className="header__content app-container">
         {/* Main header */}
-        <div className="py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-brand bg-brand-accent flex items-center justify-center">
+        <div className="header__main">
+          <div className="header__branding">
+            <div className="header__logo">
               <svg
-                className="w-5 h-5 text-white"
+                className="header__logo-icon"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -64,25 +45,25 @@ export function Header({ showFilesHeader = false }: HeaderProps) {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-brand-text">LocalConvert</h1>
-              <p className="text-xs text-brand-text-secondary">100% local, privacy-first</p>
+              <h1 className="header__title">LocalConvert</h1>
+              <p className="header__subtitle">100% local, privacy-first</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="header__actions">
             <SettingsModal />
           </div>
         </div>
 
         {/* Files header - when files are loaded */}
         {showFilesHeader && (
-          <div className="py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-brand-text">Files ({files.length})</h3>
+          <div className="header__files">
+            <div className="header__files-info">
+              <h3 className="header__files-title">Files ({files.length})</h3>
               {isConverting && processingCount > 0 && (
-                <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
+                <span className="header__processing-badge">
                   <svg
-                    className="animate-spin h-4 w-4"
+                    className="header__processing-icon animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -106,15 +87,14 @@ export function Header({ showFilesHeader = false }: HeaderProps) {
               )}
             </div>
             {!isConverting && (
-              <button
-                onClick={clearFiles}
-                className="
-                  text-sm text-brand-text-secondary hover:text-brand-error
-                  transition-colors flex items-center gap-1.5
-                "
-              >
+              <button onClick={clearFiles} className="header__clear-btn">
                 Clear all
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="header__clear-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

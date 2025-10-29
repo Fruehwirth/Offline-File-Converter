@@ -1,0 +1,49 @@
+/**
+ * Animated Filename Component Styles
+ * Shows falling animation when file extension changes
+ */
+
+.animated-filename {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animated-filename__basename {
+  display: inline-block;
+  align-items: baseline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.animated-filename__dot {
+  display: inline-block;
+  align-items: baseline;
+  vertical-align: bottom;
+}
+
+.animated-filename__extension {
+  display: inline-block;
+  position: relative;
+  align-items: baseline;
+  vertical-align: bottom;
+}
+
+/* Animation states */
+.animated-filename__extension--old {
+  display: inline-block;
+  animation: fallDown 0.2s ease-in forwards;
+}
+
+.animated-filename__extension--new {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  opacity: 0;
+  animation: fallIn 0.2s ease-out forwards;
+}

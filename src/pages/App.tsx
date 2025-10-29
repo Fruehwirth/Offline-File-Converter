@@ -21,13 +21,9 @@ import { findCommonTargets } from '../features/conversion/commonDenominators'
 import { downloadFiles } from '../features/conversion/download'
 import { useFileHandler } from '../features/conversion/useFileHandler'
 
-// Consistent container width for all elements
-const CONTAINER_MAX_WIDTH = '630px'
-const CONTAINER_PADDING = '1rem'
-const BUTTON_HEIGHT = '72px'
-const HEADER_HEIGHT_WITH_FILES = '136px' // Approximate header height when files are loaded
-
 // Button animation configuration - smooth width sliding
+const BUTTON_HEIGHT = '72px'
+
 const layoutTransition = {
   type: 'spring',
   stiffness: 400,
@@ -329,35 +325,28 @@ export function App() {
   const showProgressBackground = isConverting
 
   return (
-    <div className="h-screen flex flex-col bg-brand-bg overflow-hidden">
+    <div className="app-main">
       {/* Header with integrated files header */}
       <Header showFilesHeader={hasFiles} />
 
       {!hasFiles ? (
-        <main className="flex-1 flex items-center container mx-auto px-4 py-4 md:py-8">
+        <main className="app-main-centered app-main-centered--md">
           <EmptyState />
         </main>
       ) : (
         <>
           {/* Scrollable content area - extends under header */}
-          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide">
-            <div
-              className="mx-auto w-full"
-              style={{
-                maxWidth: CONTAINER_MAX_WIDTH,
-                paddingLeft: CONTAINER_PADDING,
-                paddingRight: CONTAINER_PADDING,
-              }}
-            >
+          <div className="app-content-scrollable">
+            <div className="app-container">
               {/* Spacer to account for sticky header */}
-              <div style={{ height: HEADER_HEIGHT_WITH_FILES }} />
+              <div className="app-header-spacer" />
 
               {/* File List */}
-              <div className="pt-4">
+              <div className="file-list__content">
                 <FileList onAddFiles={() => fileInputRef.current?.click()} />
 
                 {/* Deadspace equal to button height so last item is always visible */}
-                <div style={{ height: BUTTON_HEIGHT }} />
+                <div className="app-button-spacer" />
               </div>
             </div>
           </div>
@@ -368,71 +357,34 @@ export function App() {
             type="file"
             multiple
             accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff,.tif,.avif,.heic,.ico,.mp3,.wav,.flac,.ogg,.aac,.m4a"
-            className="sr-only"
+            className="app-file-input"
             onChange={e => handleFiles(e.target.files)}
             aria-hidden="true"
             disabled={isConverting}
           />
 
           {/* Fixed Bottom Section - Floating Button & Drawer */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 pb-4">
+          <div className="bottom-section">
             {/* Frosted glass backdrop with blur gradient - theme-aware */}
-            <div
-              className="absolute inset-0 bg-brand-bg/90"
-              style={{
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                maskImage: 'linear-gradient(to top, black 0%, black 50%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to top, black 0%, black 50%, transparent 100%)',
-                pointerEvents: 'none',
-              }}
-            />
+            <div className="bottom-section__backdrop" />
 
-            <div
-              className="w-full mx-auto relative pointer-events-none"
-              style={{
-                maxWidth: CONTAINER_MAX_WIDTH,
-                paddingLeft: CONTAINER_PADDING,
-                paddingRight: CONTAINER_PADDING,
-                minHeight: BUTTON_HEIGHT,
-              }}
-            >
+            <div className="bottom-section__container">
               {/* Drawer Container - Behind buttons, grows upward with animation */}
               <div
-                className={`
-                  absolute left-0 right-0 bottom-0 z-10
-                  transition-all duration-300 ease-out overflow-hidden origin-bottom
-                  ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 ? 'max-h-[500px] pointer-events-auto' : 'max-h-0 pointer-events-none'}
-                `}
-                style={{
-                  marginLeft: CONTAINER_PADDING,
-                  marginRight: CONTAINER_PADDING,
-                }}
+                className={`drawer ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 ? 'drawer--open' : 'drawer--closed'}`}
               >
-                <div className="bg-brand-bg-secondary border border-brand-border rounded-[36px] p-4 shadow-2xl mb-4">
+                <div className="drawer__content">
                   <TargetFormatSelector disabled={isConverting} />
 
                   {/* Cancel button */}
-                  <button
-                    onClick={() => setIsDrawerOpen(false)}
-                    className="w-full mt-4 p-3 rounded-full border border-brand-border bg-gray-100 dark:bg-black/20 hover:bg-gray-200 dark:hover:bg-black/30 text-brand-text font-medium transition-all"
-                  >
+                  <button onClick={() => setIsDrawerOpen(false)} className="btn-cancel">
                     Cancel
                   </button>
                 </div>
               </div>
 
               {/* Dynamic Button Container with smooth width sliding */}
-              <div
-                className="absolute left-0 right-0 bottom-0 flex z-20 overflow-hidden"
-                style={{
-                  pointerEvents: 'auto',
-                  marginLeft: CONTAINER_PADDING,
-                  marginRight: CONTAINER_PADDING,
-                  height: BUTTON_HEIGHT,
-                  gap: 0,
-                }}
-              >
+              <div className="button-container">
                 {/* Main Convert Button - Always present, width animates based on state */}
                 <motion.button
                   layout
@@ -463,40 +415,26 @@ export function App() {
                     }
                   }}
                   disabled={availableTargets.length === 0 && !isConverting}
-                  className={`
-                    rounded-full font-semibold text-lg
-                    overflow-hidden relative
-                    focus:outline-none
-                    transition-colors duration-300 ease-in-out
-                    ${
-                      availableTargets.length === 0 && !isConverting
-                        ? 'bg-gray-400 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
-                        : isConverting
-                          ? 'bg-gray-400 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-500 dark:hover:bg-red-600 cursor-pointer'
-                          : 'bg-brand-accent hover:bg-brand-accent-hover text-white'
-                    }
-                  `}
-                  style={{
-                    height: BUTTON_HEIGHT,
-                    minWidth: 0,
-                    flexShrink: 0,
-                    pointerEvents: allFilesConverted ? 'none' : 'auto',
-                    borderStyle: 'solid',
-                    borderColor: 'transparent',
-                  }}
+                  className={`btn-primary app-convert-btn ${
+                    availableTargets.length === 0 && !isConverting
+                      ? ''
+                      : isConverting
+                        ? 'btn-converting'
+                        : ''
+                  } ${allFilesConverted ? 'app-convert-btn--hidden' : 'app-convert-btn--visible'}`}
                 >
                   {showProgressBackground && (
                     <motion.div
-                      className="absolute inset-0 bg-gray-600 dark:bg-gray-700"
+                      className="btn-progress-bg btn-progress-bg--converting"
                       initial={{ width: 0 }}
                       animate={{ width: `${overallProgress}%` }}
                       transition={{ duration: 0.3 }}
                     />
                   )}
                   {isConverting ? (
-                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
+                    <span className="btn-content">
                       <svg
-                        className="animate-spin h-6 w-6 shrink-0"
+                        className="btn-icon animate-spin"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -518,9 +456,9 @@ export function App() {
                       Converting... {Math.round(overallProgress)}%
                     </span>
                   ) : selectedTargetFormat ? (
-                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
+                    <span className="btn-content">
                       <svg
-                        className="w-6 h-6 shrink-0"
+                        className="btn-icon"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -535,9 +473,9 @@ export function App() {
                       Convert
                     </span>
                   ) : (
-                    <span className="flex items-center justify-center gap-3 relative z-10 whitespace-nowrap">
+                    <span className="btn-content">
                       <svg
-                        className="w-6 h-6 shrink-0"
+                        className="btn-icon"
                         fill="currentColor"
                         viewBox="0 -960 960 960"
                         xmlns="http://www.w3.org/2000/svg"
@@ -576,22 +514,9 @@ export function App() {
                     }
                   }}
                   disabled={!canConvert && !isConverting}
-                  className="flex items-center justify-center bg-slate-600 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-full font-semibold text-lg transition-colors duration-300 ease-in-out relative overflow-hidden focus:outline-none"
-                  style={{
-                    height: BUTTON_HEIGHT,
-                    minWidth: 0,
-                    flexShrink: 0,
-                    pointerEvents: allFilesConverted ? 'auto' : 'none',
-                    borderStyle: 'solid',
-                    borderColor: 'transparent',
-                  }}
+                  className={`app-convert-again-btn ${allFilesConverted ? 'app-convert-again-btn--visible' : 'app-convert-again-btn--hidden'}`}
                 >
-                  <svg
-                    className="w-6 h-6 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -641,29 +566,21 @@ export function App() {
                     }
                   }}
                   disabled={isDownloading}
-                  className="rounded-full font-semibold text-lg bg-brand-bg-secondary hover:bg-brand-bg-hover text-brand-text transition-colors duration-300 ease-in-out relative overflow-hidden focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    height: BUTTON_HEIGHT,
-                    minWidth: 0,
-                    flexShrink: 0,
-                    pointerEvents: allFilesConverted ? 'auto' : 'none',
-                    borderColor: 'var(--color-border)',
-                    borderStyle: 'solid',
-                  }}
+                  className={`btn-download app-download-btn ${allFilesConverted ? 'app-download-btn--visible' : 'app-download-btn--hidden'}`}
                 >
                   {isDownloading && (
                     <motion.div
-                      className="absolute inset-0 bg-blue-500 dark:bg-blue-600"
+                      className="btn-progress-bg btn-progress-bg--downloading"
                       initial={{ width: 0 }}
                       animate={{ width: `${downloadProgress}%` }}
                       transition={{ duration: 0.2 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center justify-center gap-3 whitespace-nowrap">
+                  <span className="btn-content">
                     {isDownloading ? (
                       <>
                         <svg
-                          className="animate-spin h-6 w-6 shrink-0"
+                          className="btn-icon animate-spin"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -687,7 +604,7 @@ export function App() {
                     ) : (
                       <>
                         <svg
-                          className="w-6 h-6 shrink-0"
+                          className="btn-icon"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

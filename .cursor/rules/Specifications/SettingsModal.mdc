@@ -1,0 +1,99 @@
+---
+description: 'Settings modal with persistent user preferences. Apply when implementing or modifying application settings UI and persistent storage.'
+---
+
+# Settings Modal
+
+## Overview
+
+Settings gear icon in header opens modal with persistent user preferences stored in localStorage.
+
+## Settings Store
+
+**File:** `src/features/state/useSettingsStore.ts`
+
+- Zustand store for settings management
+- localStorage persistence across visits
+- Key: `app-settings`
+- Format: JSON object
+
+### Current Settings
+
+- **autoDownload**: Automatically download files when conversion completes
+
+## Settings Modal Component
+
+**File:** `src/components/SettingsModal.tsx`
+
+- Settings gear icon button in header
+- Click-outside and Escape key to close
+- Two toggle switches:
+  - **Theme**: Switch between light/dark mode
+  - **Download when finished**: Auto-download after conversion
+- Matches existing design system
+- Fully accessible with ARIA labels and keyboard navigation
+
+## Header Integration
+
+**File:** `src/components/Header.tsx`
+
+- Replaced `ThemeToggle` with `SettingsModal` component
+- Settings gear icon in top-right corner
+
+## Auto-Download Logic
+
+**File:** `src/pages/App.tsx`
+
+- Imports `useSettingsStore` for preferences
+- Auto-download logic after conversion completes
+- When `autoDownload` enabled and all files converted:
+  - Automatically triggers download
+  - Shows success/error toast notifications
+  - Maintains download progress UI
+
+## Features
+
+### Persistent Storage
+
+All settings automatically saved to localStorage:
+
+- Key: `app-settings`
+- Format: JSON
+- Persists across browser sessions
+
+### Theme Setting
+
+- Previously inline in header, now in settings modal
+- Same functionality, better organization
+- Synchronized with `ThemeProvider`
+
+### Auto-Download Setting
+
+- Files automatically download after conversion when enabled
+- Uses existing download infrastructure
+- Shows progress indicators during download
+- Toast notification confirms success
+
+## User Experience
+
+1. Click gear icon in top-right
+2. Toggle settings as desired
+3. Click outside or press Escape to close
+4. Settings automatically saved
+5. Settings persist across sessions
+
+## Technical Details
+
+- Zustand for state management (consistent with existing code)
+- localStorage for persistence
+- TypeScript for type safety
+- Tailwind CSS for styling (matches existing design)
+- No breaking changes to existing functionality
+
+## Files
+
+- `src/features/state/useSettingsStore.ts` - Settings store
+- `src/components/SettingsModal.tsx` - Modal component
+- `src/components/Header.tsx` - Integration
+- `src/pages/App.tsx` - Auto-download logic
+- `src/css/components/settings-modal.css` - Styles

@@ -16,21 +16,21 @@ When updating rules:
 
 ## Self-Reflection Protocol
 
-After solving a problem (especially after failures):
+After solving a problem (especially multiple failures):
 
-1. **PAUSE**: "What did I do differently that worked?"
-2. **Identify key change**: Structural vs CSS? Different approach/tool?
-3. **Share insight**: Help user understand the solution
-4. **Update mental model**: Remember pattern for future
+1. **PAUSE**: What worked differently?
+2. **Identify key change**: Structure vs CSS vs different tool?
+3. **Share insight**: Help user understand
+4. **Update mental model**: Remember pattern
 
-## General Problem-Solving
+## Problem-Solving
 
-When attempts fail multiple times:
+When failing repeatedly:
 
-1. **Stop and reassess**: Don't try variations of same approach
-2. **Question the approach**: CSS problem or structural problem?
-3. **Look broader**: What's different about the failing element?
-4. **Consider restructuring**: Sometimes HTML/JSX change beats fighting CSS
+1. **Stop and reassess**: Don't repeat same approach
+2. **Question approach**: Root cause analysis
+3. **Look broader**: What's structurally different?
+4. **Consider restructuring**: DOM change often beats CSS fight
 5. **Test incrementally**: One change at a time
 
 ## Creating New Rule Files

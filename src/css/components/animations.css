@@ -1,0 +1,68 @@
+/**
+ * Animation Keyframes
+ * All animations used throughout the application
+ */
+
+@layer utilities {
+  /* Toast slide-in animation */
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
+  /* Fade in animation for file list items */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-in forwards;
+  }
+
+  /* Fall down animation for format label changes */
+  @keyframes fallDown {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+  }
+
+  .animate-fallDown {
+    animation: fallDown 0.2s ease-in forwards;
+  }
+
+  /* Fall in animation for format label changes */
+  @keyframes fallIn {
+    0% {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-fallIn {
+    animation: fallIn 0.2s ease-out forwards;
+  }
+}

@@ -1,0 +1,50 @@
+/**
+ * Progress Bar Component Styles
+ * Visual progress indicator
+ */
+
+.progress-bar {
+  width: 100%;
+  background-color: var(--color-bg-secondary);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar--sm {
+  height: 0.25rem;
+}
+
+.progress-bar--md {
+  height: 0.5rem;
+}
+
+.progress-bar__fill {
+  border-radius: 9999px;
+  transition:
+    width 500ms ease-out,
+    background-color 300ms ease-out;
+}
+
+.progress-bar__fill--sm {
+  height: 0.25rem;
+}
+
+.progress-bar__fill--md {
+  height: 0.5rem;
+}
+
+.progress-bar__fill--queued {
+  background-color: rgba(160, 160, 160, 0.2);
+}
+
+.progress-bar__fill--processing {
+  background-color: var(--color-accent);
+}
+
+.progress-bar__fill--completed {
+  background-color: var(--color-success);
+}
+
+.progress-bar__fill--error {
+  background-color: var(--color-error);
+}

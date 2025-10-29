@@ -8,7 +8,7 @@ import { App } from './pages/App'
 import { ThemeProvider } from './features/theming/ThemeProvider'
 import { installInDev } from './utils/guardNoNetwork'
 import { assertCSP } from './utils/csp'
-import './index.css'
+import './css/main.css'
 
 // Install network guards in development
 installInDev()

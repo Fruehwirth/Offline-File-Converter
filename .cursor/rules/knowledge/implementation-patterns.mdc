@@ -1,0 +1,262 @@
+---
+description: 'Common implementation patterns for dependencies, encoding, PWA, and offline capabilities. Apply when working with npm packages, audio encoding, or offline features.'
+---
+
+# Implementation Patterns
+
+## NPM Dependency Management
+
+### Overview
+
+All library files downloaded from npm, not hosted manually. Improves maintainability and uses trusted npm infrastructure.
+
+### Build Process
+
+**Development:**
+
+```bash
+npm install      # Downloads from npm
+npm run dev      # Vite serves from node_modules
+```
+
+**Production:**
+
+```bash
+npm run build    # Bundles code, copies files from node_modules
+```
+
+### Vite Configuration
+
+`vite-plugin-static-copy` automatically copies FFmpeg core files from `node_modules/@ffmpeg/core/dist/` to `dist/` during build.
+
+### Benefits
+
+1. No manual downloads - all via `package.json`
+2. Easy updates - `npm install @ffmpeg/core@latest`
+3. Trusted source - directly from npm registry
+4. Smaller repository - no large binaries in git
+5. Better caching - npm CDN optimization
+6. Version control - locked in `package.json`
+
+### Updating Dependencies
+
+```bash
+# Check for updates
+npm outdated @ffmpeg/core
+
+# Update to specific version
+npm install @ffmpeg/core@0.12.0
+
+# Or latest
+npm install @ffmpeg/core@latest
+
+# Rebuild
+npm run build
+```
+
+## OGG Vorbis Encoding
+
+### Implementation
+
+- **Library**: `wasm-media-encoders`
+- **Encoder**: OggVorbisEncoder
+- **Architecture**: Main thread decodes (Web Audio API), worker thread encodes
+
+### Why Not FFmpeg?
+
+Standard FFmpeg WASM build doesn't include Vorbis/Opus encoders. Would cause "null function or function signature mismatch" errors.
+
+### Why wasm-media-encoders?
+
+- ✅ Pre-built with Vorbis support
+- ✅ Smaller footprint than custom FFmpeg build
+- ✅ Well-maintained and tested
+- ✅ Easy integration
+- ✅ Consistent cross-platform behavior
+
+### Encoding Parameters
+
+- **Bitrate**: Configurable (default: 192 kbps)
+- **Sample Rate**: Preserves original
+- **Channels**: Supports mono and stereo
+
+### Files
+
+- `src/features/conversion/audioProcessing.ts` - OGG in worker path
+- `src/features/workers/audioProcessing.worker.ts` - `encodeOGG()` function
+- `src/features/conversion/formatRegistry.ts` - OGG format definition
+
+## Offline-First PWA
+
+### How It Works
+
+**Initial Load:**
+
+```
+User visits → Service Worker installs → Cache all assets (1.3 MB) → Ready offline
+```
+
+**Subsequent Visits:**
+
+```
+User opens → Service Worker intercepts → Serves from cache → Zero network traffic
+```
+
+### Testing Offline
+
+**Local Production Build:**
+
+```bash
+npm run build
+npm run preview    # Opens at localhost:4173
+```
+
+**Test steps:**
+
+1. First load: See all assets downloading
+2. Refresh: All from Service Worker cache
+3. DevTools → Application → Service Workers → Check "Offline"
+4. Refresh: App still works!
+
+### What Gets Cached
+
+All 17 production assets (~1.3 MB, compressed ~450 KB):
+
+- HTML, CSS, JavaScript bundles
+- FFmpeg WASM files
+- Service Worker
+- Manifest
+
+### Service Worker Strategy
+
+**Cache-First** with network fallback:
+
+```
+Request → Check cache first
+  ├─ Found → Serve from cache (instant)
+  └─ Not found → Fetch from network → Cache for future
+```
+
+### No Network After Load
+
+✅ Zero network requests when:
+
+- Opening files
+- Converting files
+- Downloading results
+- Switching formats
+- Changing settings
+
+❌ No requests to:
+
+- npm servers
+- CDNs
+- Analytics
+- Tracking
+- External APIs
+
+### PWA Installation
+
+**Desktop:**
+
+- Chrome/Edge: Install icon in address bar
+- Firefox: Page Actions → Install
+
+**Mobile:**
+
+- Chrome (Android): "Add to Home Screen"
+- Safari (iOS): Share → "Add to Home Screen"
+
+### Build Process
+
+Build automatically:
+
+1. ✅ Bundles all JavaScript/CSS
+2. ✅ Copies FFmpeg files from `node_modules`
+3. ✅ Generates hashed filenames for cache busting
+4. ✅ Injects all assets into Service Worker
+5. ✅ Creates manifest.json
+6. ✅ Optimizes for production
+
+### Files
+
+- `public/sw.js` - Service Worker (cache-first strategy)
+- `public/manifest.json` - PWA manifest
+- `vite.config.ts` - Asset injection plugin
+
+## Testing Offline Capability
+
+### Development vs Production
+
+**Development (`npm run dev`):**
+
+- Runs on `localhost:5173` (Vite dev server)
+- For developer use only
+- Hot reload, debugging enabled
+- Network traffic to localhost is normal
+
+**Production (GitHub Pages):**
+
+- Runs on your domain
+- All files cached by Service Worker
+- No localhost, no npm servers
+- Fully offline after initial load
+
+### Network Tab Behavior
+
+**First Load:**
+
+```
+GET /                              200  (from your domain)
+GET /assets/index-xxx.js           200  (from your domain)
+GET /ffmpeg-core.wasm              200  (from your domain)
+... (more assets)
+```
+
+**After Refresh:**
+
+```
+(ServiceWorker) All requests from cache
+```
+
+**After 3+ Seconds:**
+
+```
+(empty - no activity)
+```
+
+### Troubleshooting
+
+**"Service Worker not installing":**
+
+1. Check browser console for errors
+2. Ensure HTTPS (required for SW, localhost works without)
+3. Hard refresh (Ctrl+Shift+R)
+
+**"Offline mode not working":**
+
+1. DevTools → Application → Service Workers (should be activated)
+2. DevTools → Application → Cache Storage (should see all assets)
+3. Check "Offline" in DevTools → Refresh
+
+**"Still seeing network traffic":**
+
+- In dev mode (`npm run dev`): This is normal
+- In production: First load downloads, subsequent loads from cache
+
+## Privacy Benefits
+
+1. **No Data Leaves Device**
+   - Files never uploaded
+   - Processing 100% local
+   - No telemetry
+
+2. **No Network After Load**
+   - Can't phone home
+   - Can't track users
+   - Can't log usage
+
+3. **Verifiable Privacy**
+   - Check Network tab: Empty after load
+   - Disconnect WiFi: Still works
+   - Open source: Audit the code

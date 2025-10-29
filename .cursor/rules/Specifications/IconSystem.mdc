@@ -1,0 +1,172 @@
+---
+description: 'File type icon system for visual representation of different file types. Apply when adding new file type categories or updating icon designs.'
+---
+
+# Icon System
+
+## Overview
+
+Displays appropriate icons for various file types when no preview is available (audio, video, archive, document files).
+
+## Structure
+
+### Icon Files
+
+Location: `src/assets/icons/`
+
+- `audio.svg` - Audio files (MP3, WAV, FLAC, etc.)
+- `video.svg` - Video files
+- `image.svg` - Image files (fallback)
+- `archive.svg` - Archive files (ZIP, RAR, 7Z, etc.)
+- `document.svg` - Documents (PDF, DOCX, etc.)
+- `file.svg` - Generic icon (fallback)
+
+### Main Component
+
+**File:** `src/components/FileTypeIcon.tsx`
+
+Selects and displays correct icon based on file type.
+
+**Props:**
+
+- `file: File` - File to display icon for
+- `className?: string` - Optional CSS classes
+
+**Functions:**
+
+- `getFileCategory(file: File): FileCategory` - Determines category from MIME type
+- `getCategoryIcon(category: FileCategory): string` - Returns icon path for category
+
+### Integration
+
+**File:** `src/components/FileList.tsx`
+
+`FileThumbnail` component shows either thumbnail (images/videos) or file type icon.
+
+## Design Specifications
+
+### Icon Specs
+
+- **Size**: 48x48 pixels
+- **Background**: Dark gray (#4B5563)
+- **Border Radius**: 8px (rounded corners)
+- **Icon Color**: White (#FFFFFF)
+- **Style**: Minimalist, app-like
+
+### SVG Structure
+
+```svg
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="48" height="48" rx="8" fill="#4B5563"/>
+
+  <!-- Icon design -->
+  <path d="..." fill="white"/>
+</svg>
+```
+
+## Adding Custom Icons
+
+### Step 1: Create SVG
+
+1. Create icon with above specifications
+2. Save as `.svg` in `src/assets/icons/`
+3. Use descriptive name (e.g., `spreadsheet.svg`)
+
+### Step 2: Add Icon Type
+
+Extend `FileCategory` type in `FileTypeIcon.tsx`:
+
+```typescript
+export type FileCategory =
+  | 'audio'
+  | 'video'
+  | 'image'
+  | 'archive'
+  | 'document'
+  | 'spreadsheet'
+  | 'unknown'
+```
+
+### Step 3: Import Icon
+
+```typescript
+import spreadsheetIcon from '../assets/icons/spreadsheet.svg'
+```
+
+### Step 4: Extend Category Logic
+
+Add logic in `getFileCategory`:
+
+```typescript
+// Spreadsheet types
+if (type.includes('spreadsheet') || type.includes('excel') || type.includes('sheet')) {
+  return 'spreadsheet'
+}
+```
+
+### Step 5: Map Icon
+
+Extend `getCategoryIcon`:
+
+```typescript
+case 'spreadsheet':
+  return spreadsheetIcon
+```
+
+## Category Mapping
+
+| Category | MIME Types                                | Icon           |
+| -------- | ----------------------------------------- | -------------- |
+| Audio    | `audio/*`                                 | `audio.svg`    |
+| Video    | `video/*`                                 | `video.svg`    |
+| Image    | `image/*`                                 | `image.svg`    |
+| Archive  | `*zip*`, `*rar*`, `*7z*`, `*tar*`, `*gz*` | `archive.svg`  |
+| Document | `*pdf*`, `*document*`, `*word*`, `*text*` | `document.svg` |
+| Unknown  | All others                                | `file.svg`     |
+
+## Best Practices
+
+1. **Consistency**: Maintain visual style across all icons
+2. **Simplicity**: Use clear, recognizable shapes
+3. **Contrast**: Good contrast between icon and background
+4. **Optimization**: Optimize SVGs for smaller file sizes
+5. **Accessibility**: Icons recognizable without color
+
+## Technical Details
+
+### TypeScript Support
+
+**File:** `src/types/svg.d.ts`
+
+```typescript
+declare module '*.svg' {
+  const content: string
+  export default content
+}
+```
+
+### Vite Integration
+
+Vite handles SVG imports automatically as asset URLs. No additional configuration needed.
+
+### Usage in Components
+
+```tsx
+import { FileTypeIcon } from './FileTypeIcon'
+
+function MyComponent({ file }: { file: File }) {
+  return (
+    <div className="w-12 h-12">
+      <FileTypeIcon file={file} />
+    </div>
+  )
+}
+```
+
+## Files
+
+- `src/components/FileTypeIcon.tsx` - Main component
+- `src/assets/icons/*.svg` - Icon files
+- `src/types/svg.d.ts` - TypeScript support
+- `src/css/components/file-type-icon.css` - Styles

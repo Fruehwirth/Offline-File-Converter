@@ -1,0 +1,114 @@
+---
+description: 'Guide for maintaining and extending the CSS architecture. Apply when adding new components, refactoring styles, or organizing CSS.'
+---
+
+# CSS Refactoring & Maintenance
+
+## File Organization
+
+When adding new component styles:
+
+1. Create dedicated file in `src/css/components/[component-name].css`
+2. Add import to `src/css/main.css` (order: themes → base → utilities → layout → components)
+3. Use BEM-like naming: `component`, `component__element`, `component--modifier`
+
+## Adding New Components
+
+```css
+/* src/css/components/my-component.css */
+.my-component {
+  /* Base component styles */
+}
+
+.my-component__header {
+  /* Sub-element styles */
+}
+
+.my-component--active {
+  /* Modifier/state styles */
+}
+```
+
+## Theme Integration
+
+Always use CSS custom properties for:
+
+- Colors: `var(--color-accent)`, `var(--color-text)`
+- Spacing: `var(--spacing-md)`, `var(--radius)`
+- Transitions: `var(--transition-fast)`
+
+**Never hardcode** theme values in component CSS.
+
+## Animation Guidelines
+
+- All `@keyframes` go in `src/css/components/animations.css`
+- Create reusable animation classes: `.animate-fadeIn`, `.animate-slide-in`
+- Apply with class names, not inline styles
+
+## When to Use Tailwind vs Custom CSS
+
+**Use Tailwind for:**
+
+- Rapid prototyping
+- One-off spacing/sizing adjustments
+- Responsive utilities
+
+**Use Custom CSS for:**
+
+- Component-specific styling
+- Complex animations
+- Repeated patterns
+- Theme-dependent values
+
+## Refactoring Checklist
+
+When converting inline styles/Tailwind to custom CSS:
+
+1. ✅ Identify all instances of the pattern
+2. ✅ Create semantic class name following BEM
+3. ✅ Add CSS to appropriate file (`components/` or `layout/`)
+4. ✅ Replace all instances with new class
+5. ✅ Remove unused constants/inline styles
+6. ✅ Test build (`npm run build`)
+7. ✅ Verify visual consistency
+
+## Common Patterns
+
+**Container pattern:**
+
+```css
+.my-container {
+  max-width: 630px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+```
+
+**Button pattern:**
+
+```css
+.btn-variant {
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: colors 300ms ease-in-out;
+  /* ... */
+}
+```
+
+**Modifier pattern:**
+
+```css
+.element--state {
+  /* State-specific overrides */
+}
+```
+
+## Key Principles
+
+1. **Semantic naming**: Class names describe purpose, not appearance
+2. **Single responsibility**: One CSS file per component
+3. **Theme variables**: Always use custom properties
+4. **No redundancy**: DRY - reuse patterns
+5. **Build validation**: Always verify with `npm run build`

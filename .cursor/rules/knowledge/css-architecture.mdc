@@ -1,0 +1,123 @@
+---
+description: 'Modular CSS architecture using BEM naming convention. Apply when organizing CSS, creating new components, or refactoring styles.'
+---
+
+# CSS Architecture
+
+## Directory Structure
+
+```
+src/css/
+├── base/          # Core styles (reset, Tailwind imports)
+├── components/    # Component-specific styles
+├── layout/        # Layout patterns (container, buttons, drawer)
+├── utilities/     # Accessibility, scrollbar
+├── themes/        # CSS variables, theme tokens
+└── main.css       # Central import file
+```
+
+**Import order:** themes → base → utilities → layout → components
+
+## Naming Convention (BEM-inspired)
+
+### Component Level
+
+```css
+.component-name {
+}
+```
+
+Examples: `.header`, `.toast-container`, `.file-list`
+
+### Element Level
+
+```css
+.component__element {
+}
+```
+
+Examples: `.header__logo`, `.btn-content`, `.file-item__thumbnail`
+
+### Modifier Level
+
+```css
+.component--modifier {
+}
+.component__element--modifier {
+}
+```
+
+Examples: `.drawer--open`, `.toast--error`, `.file-item--error`
+
+## Common Patterns
+
+### Container Pattern
+
+Use `.app-container` for consistent max-width (630px) and padding:
+
+```tsx
+<div className="app-container">{/* Content with consistent width */}</div>
+```
+
+### Button Variants
+
+- `.btn-primary` - Primary action button
+- `.btn-secondary` - Secondary circular button
+- `.btn-download` - Download button
+- `.btn-cancel` - Cancel/dismiss button
+- `.btn-converting` - Converting state modifier
+
+### Theme Variables
+
+All colors use CSS custom properties from `themes/tokens.css`:
+
+- `var(--color-bg)` - Background color
+- `var(--color-text)` - Text color
+- `var(--color-accent)` - Accent/primary color
+- `var(--color-border)` - Border color
+
+## Migration Pattern
+
+### Before (Inline Tailwind)
+
+```tsx
+<button className="rounded-full font-semibold text-lg bg-brand-accent hover:bg-brand-accent-hover text-white">
+  Convert
+</button>
+```
+
+### After (Semantic CSS Class)
+
+```tsx
+<button className="btn-primary">Convert</button>
+```
+
+## Best Practices
+
+1. **Semantic naming** - Describe purpose, not appearance
+   - ✅ `.btn-primary`, `.header__backdrop`
+   - ❌ `.blue-button`, `.div-with-blur`
+
+2. **Group by component** - Keep related styles together in one file
+
+3. **Animations separate** - All `@keyframes` in `animations.css`
+
+4. **Preserve theme variables** - Never hardcode colors, use CSS variables
+
+5. **Test after changes** - Run `npm run build` to catch errors early
+
+## Adding New Styles
+
+1. Identify component/utility/layout category
+2. Create or update appropriate CSS file in `src/css/`
+3. Use BEM naming convention
+4. Update `main.css` if adding new file
+5. Test build and verify visuals
+
+## Files
+
+- `src/css/main.css` - Central import
+- `src/css/themes/tokens.css` - CSS variables
+- `src/css/components/animations.css` - All keyframe animations
+- `src/css/layout/` - Layout patterns
+- `src/css/components/` - Component styles

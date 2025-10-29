@@ -1,0 +1,97 @@
+/**
+ * App Component Styles
+ * Main application container and bottom section buttons
+ */
+
+/* Hidden file input */
+.app-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Main convert button states */
+.app-convert-btn {
+  height: 72px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.app-convert-btn--hidden {
+  pointer-events: none;
+}
+
+.app-convert-btn--visible {
+  pointer-events: auto;
+}
+
+/* Convert again button (circular) */
+.app-convert-again-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  min-width: 0;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: colors 300ms ease-in-out;
+  background-color: #475569;
+  color: white;
+  padding: 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.app-convert-again-btn:hover {
+  background-color: #334155;
+}
+
+[data-theme='dark'] .app-convert-again-btn {
+  background-color: #334155;
+}
+
+[data-theme='dark'] .app-convert-again-btn:hover {
+  background-color: #475569;
+}
+
+.app-convert-again-btn:focus {
+  outline: none;
+}
+
+.app-convert-again-btn:disabled {
+  cursor: not-allowed;
+}
+
+.app-convert-again-btn--hidden {
+  pointer-events: none;
+}
+
+.app-convert-again-btn--visible {
+  pointer-events: auto;
+}
+
+/* Download button */
+.app-download-btn {
+  height: 72px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.app-download-btn--hidden {
+  pointer-events: none;
+}
+
+.app-download-btn--visible {
+  pointer-events: auto;
+}

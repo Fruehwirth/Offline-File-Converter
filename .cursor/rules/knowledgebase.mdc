@@ -39,6 +39,35 @@ We want to keep everything abstracted in a way that makes future addions of feat
 
 This website is deployed on GitHub Pages and should me mantained as such, make sure the website runs and builds under the local environment and GitHub Pages
 
+# CSS Architecture
+
+## Structured CSS Organization
+
+All CSS is organized in `src/css/` with the following structure:
+
+- **`base/`** - Reset, Tailwind imports, body styles
+- **`components/`** - Component-specific styles (header, toast, file-list, etc.)
+- **`layout/`** - Layout patterns (container, buttons, drawer)
+- **`utilities/`** - Utility classes (accessibility, scrollbar)
+- **`themes/`** - Design tokens and theme variables
+- **`main.css`** - Main import file (imported in `main.tsx`)
+
+## Naming Convention
+
+Use BEM-like naming for semantic class names:
+
+- **Block**: `.header`, `.toast`, `.btn-primary`
+- **Element**: `.header__logo`, `.toast__content`, `.btn-content`
+- **Modifier**: `.toast--error`, `.btn-primary--disabled`, `.drawer--open`
+
+## CSS Principles
+
+- Each major component has its own CSS file
+- Use semantic class names, not generic utilities
+- Keep Tailwind for rapid prototyping where appropriate
+- All animations in `components/animations.css`
+- Theme variables in `themes/tokens.css` (CSS custom properties)
+
 # UI Patterns
 
 ## Animation Standards

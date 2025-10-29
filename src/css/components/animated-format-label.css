@@ -1,0 +1,32 @@
+/**
+ * Animated Format Label Component Styles
+ * Shows falling animation when format label changes
+ */
+
+.animated-format-label {
+  display: inline-block;
+  position: relative;
+}
+
+.animated-format-label__badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius);
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-accent);
+  display: inline-block;
+  white-space: nowrap;
+  min-width: 150px;
+}
+
+/* Animation states */
+.animated-format-label__badge--old {
+  animation: fallDown 0.2s ease-in forwards;
+}
+
+.animated-format-label__badge--new {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  animation: fallIn 0.2s ease-out forwards;
+}

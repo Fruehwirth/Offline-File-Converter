@@ -1,0 +1,96 @@
+/**
+ * Drawer Styles
+ * Slide-out drawer component at the bottom
+ */
+
+/* Fixed bottom section container */
+.bottom-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-bottom: 1rem;
+}
+
+/* Frosted glass backdrop */
+.bottom-section__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(30, 30, 30, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  mask-image: linear-gradient(to top, black 0%, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, black 50%, transparent 100%);
+  pointer-events: none;
+}
+
+[data-theme='light'] .bottom-section__backdrop {
+  background-color: rgba(248, 250, 252, 0.9);
+}
+
+/* Bottom container wrapper */
+.bottom-section__container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  pointer-events: none;
+  max-width: 630px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  min-height: 72px;
+}
+
+/* Drawer container */
+.drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  transition:
+    max-height 300ms ease-out,
+    pointer-events 0ms;
+  overflow: hidden;
+  transform-origin: bottom;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.drawer--closed {
+  max-height: 0;
+  pointer-events: none;
+}
+
+.drawer--open {
+  max-height: 500px;
+  pointer-events: auto;
+}
+
+/* Drawer content */
+.drawer__content {
+  background-color: var(--color-bg-secondary);
+  border-width: 1px;
+  border-color: var(--color-border);
+  border-radius: 36px;
+  padding: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  margin-bottom: 1rem;
+}
+
+/* Button container */
+.button-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: auto;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  height: 72px;
+  gap: 0;
+}

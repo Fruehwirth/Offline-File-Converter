@@ -1,0 +1,14 @@
+/**
+ * Base Reset & Body Styles
+ * Core styling for the application
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-text antialiased;
+  }
+}

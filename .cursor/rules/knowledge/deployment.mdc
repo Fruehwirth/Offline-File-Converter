@@ -1,0 +1,180 @@
+---
+description: 'Deployment configuration for GitHub Pages with custom domain. Apply when deploying, troubleshooting deployment issues, or updating deployment configuration.'
+---
+
+# Deployment
+
+## Configuration
+
+All deployment files configured:
+
+1. ✅ Base path: `/` in `vite.config.ts` (for custom domain)
+2. ✅ Service Worker: `public/sw.js` (enables COOP/COEP headers for FFmpeg)
+3. ✅ GitHub Actions: `.github/workflows/deploy.yml` (automatic deployment)
+4. ✅ CSP updated to allow Service Worker
+5. ✅ FFmpeg paths updated to use base URL
+6. ✅ `.nojekyll` file prevents Jekyll processing
+
+## Automatic Deployment (Recommended)
+
+Automatically deploys on push to `main` branch.
+
+### Step 1: Enable GitHub Pages
+
+1. Go to repository Settings → Pages
+2. Under **Source**, select: **GitHub Actions**
+3. Click Save
+
+### Step 2: Push Changes
+
+```bash
+git add .
+git commit -m "Configure GitHub Pages deployment"
+git push origin main
+```
+
+### Step 3: Monitor
+
+1. Go to **Actions** tab
+2. Watch "Deploy to GitHub Pages" workflow
+3. Once complete (✅), site is live
+
+⏱️ First deployment: ~2-3 minutes
+
+## Manual Deployment
+
+### Build Locally
+
+```bash
+npm run build
+```
+
+### Deploy with GitHub CLI
+
+```bash
+gh workflow run deploy.yml
+```
+
+## Testing Before Deploy
+
+Always test locally first:
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+Visit `http://localhost:4173` and verify:
+
+- ✅ All conversions work
+- ✅ FFmpeg conversions complete
+- ✅ No console errors
+- ✅ Files download correctly
+
+## Troubleshooting
+
+### FFmpeg Not Working
+
+**Symptom:** "SharedArrayBuffer is not defined"
+
+**Solution:**
+
+1. DevTools → Application → Service Workers
+2. Ensure `sw.js` is registered and activated
+3. Hard refresh (Ctrl+Shift+R / Cmd+Shift+R)
+
+### 404 Errors for Assets
+
+**Symptom:** CSS, JS return 404
+
+**Solution:**
+
+- Verify `base: '/'` in `vite.config.ts`
+- Check `.nojekyll` exists in `public/` folder
+- Clear browser cache and hard refresh
+
+### CORS or CSP Errors
+
+**Symptom:** "Blocked by Content Security Policy"
+
+**Solution:**
+
+- Check Service Worker is active (handles headers)
+- Verify CSP in `index.html` allows necessary resources
+- Check browser console for specific violations
+
+### Deployment Workflow Fails
+
+**Symptom:** GitHub Actions workflow fails
+
+**Solution:**
+
+1. Check Actions tab for specific error
+2. Verify GitHub Pages enabled in Settings
+3. Ensure repository has necessary permissions
+4. Check `package.json` has compatible lock file
+
+## Environment Differences
+
+### Development (`npm run dev`)
+
+- Base URL: `/`
+- COOP/COEP via Vite dev server
+- No Service Worker
+
+### Production (`npm run build`)
+
+- Base URL: `/`
+- COOP/COEP via Service Worker
+- Service Worker registered
+
+## Updating Deployed Site
+
+Simply push to `main`:
+
+```bash
+git add .
+git commit -m "Your update message"
+git push origin main
+```
+
+GitHub Actions automatically rebuilds and redeploys! 🚀
+
+## Important Notes
+
+1. **First visit may require refresh**: Service Worker registration needs initial page load
+2. **HTTPS only**: Service Workers require HTTPS (GitHub Pages provides this)
+3. **Browser compatibility**: Modern browsers only (Chrome 88+, Firefox 79+, Safari 15.2+)
+4. **Custom domain**: Ensure DNS supports GitHub Pages
+5. **Cache busting**: Vite automatically adds hashes to filenames
+
+## Success Checklist
+
+After deployment, verify:
+
+- [ ] Site loads at your domain
+- [ ] Service Worker registered (DevTools → Application)
+- [ ] Can drop files and see them in list
+- [ ] Image conversions work
+- [ ] Audio conversions work (FFmpeg-based)
+- [ ] Downloads work correctly
+- [ ] Theme toggle works
+- [ ] No console errors
+
+## Service Worker Purpose
+
+GitHub Pages doesn't allow custom HTTP headers, but FFmpeg.wasm requires:
+
+- `Cross-Origin-Embedder-Policy: credentialless`
+- `Cross-Origin-Opener-Policy: same-origin`
+
+Service Worker intercepts requests and adds these headers, enabling FFmpeg! 🎉
+
+## Monitoring
+
+- **Deployment status**: GitHub Actions tab
+- **Live site**: Your custom domain
+- **Build logs**: Click on workflow run → build/deploy jobs

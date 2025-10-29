@@ -1,0 +1,148 @@
+/**
+ * Header Component Styles
+ * Application header with branding and settings
+ */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  position: relative;
+}
+
+/* Frosted glass background */
+.header__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(30, 30, 30, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+}
+
+[data-theme='light'] .header__backdrop {
+  background-color: rgba(248, 250, 252, 0.75);
+}
+
+/* Header content wrapper */
+.header__content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Main header row */
+.header__main {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Branding section */
+.header__branding {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header__logo {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius);
+  background-color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header__logo-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+.header__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.header__subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Actions section */
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Files header section */
+.header__files {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header__files-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header__files-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Processing indicator badge */
+.header__processing-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .header__processing-badge {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.header__processing-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Clear all button */
+.header__clear-btn {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  transition: color 150ms ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header__clear-btn:hover {
+  color: var(--color-error);
+}
+
+.header__clear-icon {
+  width: 1rem;
+  height: 1rem;
+}
