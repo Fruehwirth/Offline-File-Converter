@@ -8,7 +8,7 @@
   top: 6rem; /* top-24 */
   z-index: 10;
   border: 2px solid var(--color-border);
-  border-radius: var(--border-radius-brand);
+  border-radius: var(--border-radius-brand, 1rem);
   box-shadow: var(--shadow-lg);
   padding: 1rem;
   min-width: 200px;
