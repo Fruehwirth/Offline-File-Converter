@@ -57,6 +57,27 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
   const allFormatsDetected = files.length > 0 && files.every(f => f.sourceFormat !== null)
   const hasIncompatibleFiles = allFormatsDetected && availableTargets.length === 0
 
+  // Filter out the common source format when all files have the same type
+  const filteredTargets = (() => {
+    if (files.length === 0) return availableTargets
+
+    // Get all unique source formats
+    const sourceFormats = files
+      .map(f => f.sourceFormat)
+      .filter((format): format is FormatId => format !== null)
+
+    // Check if all files have the same source format
+    const allSameFormat = sourceFormats.length > 0 && sourceFormats.every(f => f === sourceFormats[0])
+
+    // If all same format, filter it out from available targets
+    if (allSameFormat) {
+      const commonSourceFormat = sourceFormats[0]
+      return availableTargets.filter(target => target !== commonSourceFormat)
+    }
+
+    return availableTargets
+  })()
+
   // Delay showing the error to avoid flash during initial target calculation
   useEffect(() => {
     if (hasIncompatibleFiles) {
@@ -92,7 +113,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
     )
   }
 
-  if (availableTargets.length === 0) {
+  if (filteredTargets.length === 0) {
     return null
   }
 
@@ -105,7 +126,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
         </div>
 
         <div className="flex flex-wrap gap-2 w-full">
-          {availableTargets.map(format => (
+          {filteredTargets.map(format => (
             <button
               key={format}
               onClick={() => handleFormatClick(format)}
@@ -126,7 +147,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
           ))}
         </div>
 
-        {availableTargets.length > 1 && (
+        {filteredTargets.length > 1 && (
           <p className="text-xs text-brand-text-secondary mt-3">
             All selected files can be converted to these formats
           </p>

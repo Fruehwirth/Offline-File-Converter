@@ -18,6 +18,9 @@
 
   .animate-slide-in {
     animation: slide-in 0.3s ease-out;
+    /* Performance optimization - force GPU acceleration */
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 
   /* Fade in animation for file list items */
@@ -32,6 +35,9 @@
 
   .animate-fadeIn {
     animation: fadeIn 0.5s ease-in forwards;
+    /* Performance optimization - force GPU acceleration */
+    will-change: opacity;
+    transform: translateZ(0);
   }
 
   /* Fall down animation for format label changes */
@@ -48,6 +54,9 @@
 
   .animate-fallDown {
     animation: fallDown 0.2s ease-in forwards;
+    /* Performance optimization - force GPU acceleration */
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 
   /* Fall in animation for format label changes */
@@ -64,5 +73,8 @@
 
   .animate-fallIn {
     animation: fallIn 0.2s ease-out forwards;
+    /* Performance optimization - force GPU acceleration */
+    will-change: transform, opacity;
+    transform: translateZ(0);
   }
 }

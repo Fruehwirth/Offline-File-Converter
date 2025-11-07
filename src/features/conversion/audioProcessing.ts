@@ -228,11 +228,19 @@ async function convertAudioWithWorker(
   // Start at 0% since we only want to show encoding progress
   onProgress?.({ percent: 0, message: 'Preparing audio...' })
 
+  // Yield to browser to allow UI updates before heavy operation
+  await new Promise(resolve => setTimeout(resolve, 0))
+
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
   const fileData = await file.arrayBuffer()
 
+  // Yield again after reading file data
+  await new Promise(resolve => setTimeout(resolve, 0))
+
   let audioBuffer: AudioBuffer
   try {
+    // decodeAudioData is async but CPU-intensive
+    // The browser will handle it, but we've yielded beforehand to update UI
     audioBuffer = await audioContext.decodeAudioData(fileData)
   } catch (error) {
     await audioContext.close()
@@ -240,6 +248,9 @@ async function convertAudioWithWorker(
       `Failed to decode audio: ${error instanceof Error ? error.message : 'Unknown error'}`
     )
   }
+
+  // Yield after decoding to let UI breathe before encoding starts
+  await new Promise(resolve => setTimeout(resolve, 0))
 
   // Check again after async operation
   if (abortSignal?.aborted) {

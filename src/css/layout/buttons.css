@@ -169,7 +169,7 @@
 .btn-progress-bg {
   position: absolute;
   inset: 0;
-  transition: width 300ms ease-in-out;
+  /* No CSS transition - animated by Framer Motion */
 }
 
 .btn-progress-bg--converting {

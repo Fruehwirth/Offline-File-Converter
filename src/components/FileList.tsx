@@ -6,7 +6,7 @@
 import { useConversionStore } from '../features/state/useConversionStore'
 import { formatBytes } from '../utils/bytes'
 import { downloadBlob } from '../features/conversion/download'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, memo } from 'react'
 import { AnimatedFilename } from './AnimatedFilename'
 import { FileTypeIcon } from './FileTypeIcon'
 import { AudioPreviewIcon } from './AudioPreviewIcon'
@@ -24,18 +24,27 @@ function useSmoothProgress(targetProgress: number, status: string) {
   const rafRef = useRef<number>()
   const startTimeRef = useRef<number>()
   const startProgressRef = useRef(targetProgress)
+  const targetProgressRef = useRef(targetProgress)
 
   useEffect(() => {
-    // When target changes, start smooth animation
-    if (smoothProgress !== targetProgress) {
-      // If progress goes backward, reset immediately (no animation)
-      // This handles when a completed file is reused for sequential conversion
-      if (targetProgress < smoothProgress - 5) {
-        // Allow 5% tolerance for small variations
-        setSmoothProgress(targetProgress)
-        return
-      }
+    // Update target ref
+    targetProgressRef.current = targetProgress
 
+    // If progress goes backward significantly, reset immediately (no animation)
+    // This handles when a completed file is reused for sequential conversion
+    if (targetProgress < smoothProgress - 5) {
+      // Allow 5% tolerance for small variations
+      setSmoothProgress(targetProgress)
+      startProgressRef.current = targetProgress
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = undefined
+      }
+      return
+    }
+
+    // If no animation in progress and target changed, start new animation
+    if (!rafRef.current && smoothProgress !== targetProgress) {
       startProgressRef.current = smoothProgress
       startTimeRef.current = Date.now()
 
@@ -43,34 +52,32 @@ function useSmoothProgress(targetProgress: number, status: string) {
         const now = Date.now()
         const elapsed = now - (startTimeRef.current || now)
 
-        // Minimum animation duration based on distance
-        const distance = Math.abs(targetProgress - startProgressRef.current)
-        const minDuration = Math.max(300, distance * 10) // At least 300ms, longer for bigger jumps
+        // Use fixed shorter duration for responsiveness during concurrent conversions
+        const duration = 400 // Fixed 400ms animation
 
-        const progress = Math.min(elapsed / minDuration, 1)
+        const progress = Math.min(elapsed / duration, 1)
 
         // Ease-out function for smooth deceleration
         const easeOut = 1 - Math.pow(1 - progress, 3)
 
+        // Always animate towards the current target (not the original one)
+        const currentTarget = targetProgressRef.current
         const newProgress =
-          startProgressRef.current + (targetProgress - startProgressRef.current) * easeOut
+          startProgressRef.current + (currentTarget - startProgressRef.current) * easeOut
 
         setSmoothProgress(newProgress)
 
-        if (progress < 1) {
+        if (progress < 1 && currentTarget > newProgress) {
           rafRef.current = requestAnimationFrame(animate)
         } else {
-          setSmoothProgress(targetProgress)
+          // Animation complete, set to exact target and clear animation
+          setSmoothProgress(currentTarget)
+          rafRef.current = undefined
+          startProgressRef.current = currentTarget
         }
       }
 
       rafRef.current = requestAnimationFrame(animate)
-    }
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
-      }
     }
   }, [targetProgress, smoothProgress])
 
@@ -78,8 +85,23 @@ function useSmoothProgress(targetProgress: number, status: string) {
   useEffect(() => {
     if (status === 'queued') {
       setSmoothProgress(0)
+      startProgressRef.current = 0
+      targetProgressRef.current = 0
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = undefined
+      }
     }
   }, [status])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+    }
+  }, [])
 
   return smoothProgress
 }
@@ -251,15 +273,16 @@ export function FileList({ onAddFiles }: FileListProps) {
   )
 }
 
-function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
-  const removeFile = useConversionStore(state => state.removeFile)
-  const isConverting = useConversionStore(state => state.isConverting)
+const FileListItem = memo(
+  function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
+    const removeFile = useConversionStore(state => state.removeFile)
+    const isConverting = useConversionStore(state => state.isConverting)
 
-  // Use smooth progress animation
-  const displayProgress = useSmoothProgress(
-    file.status === 'completed' ? 100 : file.progress,
-    file.status
-  )
+    // Use smooth progress animation
+    const displayProgress = useSmoothProgress(
+      file.status === 'completed' ? 100 : file.progress,
+      file.status
+    )
 
   const handleDownload = () => {
     if (!file.result) return
@@ -395,4 +418,17 @@ function FileListItem({ file, hasError }: { file: any; hasError: boolean }) {
       </div>
     </div>
   )
-}
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary re-renders
+    // Only re-render if file properties that affect the UI have changed
+    return (
+      prevProps.file.id === nextProps.file.id &&
+      prevProps.file.status === nextProps.file.status &&
+      prevProps.file.progress === nextProps.file.progress &&
+      prevProps.file.error === nextProps.file.error &&
+      prevProps.file.result === nextProps.file.result &&
+      prevProps.hasError === nextProps.hasError
+    )
+  }
+)

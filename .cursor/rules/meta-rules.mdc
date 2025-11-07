@@ -4,6 +4,23 @@ alwaysApply: true
 
 # Meta Rules & Self-Reflection
 
+## 🚨 CRITICAL: Documentation File Rules
+
+**NEVER CREATE MARKDOWN FILES IN THE PROJECT ROOT DIRECTORY**
+
+- ❌ **FORBIDDEN:** Creating .md files in project root (AUDIO_PREVIEW.md, PERFORMANCE.md, etc.)
+- ✅ **REQUIRED:** All documentation, specifications, and knowledge goes in `.cursor/rules/`
+  - Use `.cursor/rules/Specifications/` for feature specs
+  - Use `.cursor/rules/knowledge/` for implementation knowledge
+  - Use `.cursor/rules/special_cases/` for edge cases and patterns
+- **Why:** Root directory is for project files only, not AI documentation
+- **This is a HIGH PRIORITY rule - violations are unacceptable**
+
+If you need to document something:
+1. Create `.mdc` file in appropriate `.cursor/rules/` subdirectory
+2. Add YAML frontmatter with description
+3. Keep content concise and actionable
+
 ## Maintaining These Rules
 
 When updating rules:

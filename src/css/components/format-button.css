@@ -24,15 +24,9 @@
 }
 
 .format-button--unselected {
-  background-color: rgb(243 244 246);
+  background-color: rgb(0 0 0 / 12%);
   border-color: var(--color-border);
   color: var(--color-text);
-}
-
-@media (prefers-color-scheme: dark) {
-  .format-button--unselected {
-    background-color: rgba(0, 0, 0, 0.2);
-  }
 }
 
 .format-button--unselected:hover {

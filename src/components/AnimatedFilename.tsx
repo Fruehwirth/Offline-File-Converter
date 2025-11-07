@@ -3,7 +3,7 @@
  * Shows a falling animation when file extension changes after conversion
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 
 interface AnimatedFilenameProps {
   originalName: string
@@ -11,7 +11,7 @@ interface AnimatedFilenameProps {
   isConverted: boolean
 }
 
-export function AnimatedFilename({
+export const AnimatedFilename = memo(function AnimatedFilename({
   originalName,
   convertedName,
   isConverted,
@@ -120,4 +120,4 @@ export function AnimatedFilename({
       `}</style>
     </p>
   )
-}
+})

@@ -4,6 +4,7 @@
  * Uses SVG icons with consistent app-like styling
  */
 
+import { memo } from 'react'
 import audioIcon from '../assets/icons/audio.svg'
 import videoIcon from '../assets/icons/video.svg'
 import imageIcon from '../assets/icons/image.svg'
@@ -83,14 +84,17 @@ function getCategoryIcon(category: FileCategory): string {
   }
 }
 
-export function FileTypeIcon({ file, className = '' }: FileTypeIconProps) {
+export const FileTypeIcon = memo(function FileTypeIcon({
+  file,
+  className = '',
+}: FileTypeIconProps) {
   const category = getFileCategory(file)
   const iconSrc = getCategoryIcon(category)
 
   return (
     <img src={iconSrc} alt={`${category} file icon`} className={`file-type-icon ${className}`} />
   )
-}
+})
 
 /**
  * Export the helper function for use in other components

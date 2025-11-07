@@ -3,13 +3,19 @@
  * Visual indicator of conversion progress
  */
 
+import { memo } from 'react'
+
 interface ProgressBarProps {
   percent: number
   status?: 'queued' | 'processing' | 'completed' | 'error'
   size?: 'sm' | 'md'
 }
 
-export function ProgressBar({ percent, status = 'processing', size = 'md' }: ProgressBarProps) {
+export const ProgressBar = memo(function ProgressBar({
+  percent,
+  status = 'processing',
+  size = 'md',
+}: ProgressBarProps) {
   return (
     <div
       className={`progress-bar progress-bar--${size}`}
@@ -26,4 +32,4 @@ export function ProgressBar({ percent, status = 'processing', size = 'md' }: Pro
       />
     </div>
   )
-}
+})

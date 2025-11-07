@@ -20,6 +20,7 @@ import { getFormat, type FormatId } from '../features/conversion/formatRegistry'
 import { findCommonTargets } from '../features/conversion/commonDenominators'
 import { downloadFiles } from '../features/conversion/download'
 import { useFileHandler } from '../features/conversion/useFileHandler'
+import { createThrottledProgress } from '../utils/throttle'
 
 // Button animation configuration - smooth width sliding
 const BUTTON_HEIGHT = '72px'
@@ -184,29 +185,35 @@ export function App() {
 
         if (isAudioConversion) {
           // Use audio processing for audio conversions
+          // Throttle progress updates to avoid UI jank (max 10 updates/second)
+          const throttledProgress = createThrottledProgress(progress => {
+            console.log(`[App] Updating file ${fileItem.file.name}:`, {
+              id: fileItem.id,
+              percent: progress.percent,
+              message: progress.message,
+            })
+            updateFileStatus(fileItem.id, 'processing', progress.percent, progress.message)
+          }, 100) // 100ms = max 10 updates per second
+
           blob = await convertAudio(
             fileItem.file,
             targetFormat,
             { bitrate: 192 },
-            progress => {
-              console.log(`[App] Updating file ${fileItem.file.name}:`, {
-                id: fileItem.id,
-                percent: progress.percent,
-                message: progress.message,
-              })
-              updateFileStatus(fileItem.id, 'processing', progress.percent, progress.message)
-            },
+            throttledProgress,
             abortController.signal
           )
         } else {
           // Use image processing for image conversions
+          // Throttle progress updates to avoid UI jank (max 10 updates/second)
+          const throttledProgress = createThrottledProgress(progress => {
+            updateFileStatus(fileItem.id, 'processing', progress.percent)
+          }, 100) // 100ms = max 10 updates per second
+
           blob = await convertImage(
             fileItem.file,
             targetFormat,
             { quality: 0.92 },
-            progress => {
-              updateFileStatus(fileItem.id, 'processing', progress.percent)
-            },
+            throttledProgress,
             abortController.signal
           )
         }
@@ -428,7 +435,10 @@ export function App() {
                   className="btn-progress-bg btn-progress-bg--converting"
                   initial={{ width: 0 }}
                   animate={{ width: `${overallProgress}%` }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: [0.4, 0, 0.2, 1] // Custom ease-out curve for smooth motion
+                  }}
                 />
               )}
               

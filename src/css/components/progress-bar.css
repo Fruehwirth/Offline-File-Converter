@@ -23,6 +23,9 @@
   transition:
     width 500ms ease-out,
     background-color 300ms ease-out;
+  /* Performance optimizations for smooth animations */
+  will-change: width;
+  contain: layout style;
 }
 
 .progress-bar__fill--sm {
