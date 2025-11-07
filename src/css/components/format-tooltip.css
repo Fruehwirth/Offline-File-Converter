@@ -31,3 +31,8 @@
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
 }
+
+/* Invert icon colors in light mode (icons are white by default) */
+[data-theme='light'] .format-tooltip__icon {
+  filter: invert(0.8);
+}
