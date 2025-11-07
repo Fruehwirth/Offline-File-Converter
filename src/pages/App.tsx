@@ -382,19 +382,17 @@ export function App() {
 
           {/* Dynamic Button Container with smooth width sliding */}
           <div className="button-container">
-            {/* Main Convert Button - Always present, width animates based on state */}
+            {/* Main Convert/Convert Again Button - Morphs from full width to circular */}
             <motion.button
               layout
               animate={{
-                width: allFilesConverted ? 0 : '100%',
-                opacity: allFilesConverted ? 0 : 1,
+                width: allFilesConverted ? BUTTON_HEIGHT : '100%',
                 paddingLeft: allFilesConverted ? 0 : '1rem',
                 paddingRight: allFilesConverted ? 0 : '1rem',
-                paddingTop: allFilesConverted ? 0 : '1rem',
-                paddingBottom: allFilesConverted ? 0 : '1rem',
-                borderWidth: allFilesConverted ? 0 : 0,
-                marginLeft: 0,
-                marginRight: 0,
+                paddingTop: allFilesConverted ? 0 : 0,
+                paddingBottom: allFilesConverted ? 0 : 0,
+                borderWidth: allFilesConverted ? 1 : 0,
+                gap: allFilesConverted ? 0 : '0.75rem',
               }}
               transition={layoutTransition}
               onClick={() => {
@@ -404,6 +402,9 @@ export function App() {
                     type: 'info',
                     message: 'Conversion cancelled',
                   })
+                } else if (allFilesConverted) {
+                  // Convert again action
+                  handleConvert()
                 } else if (!selectedTargetFormat && availableTargets.length > 0) {
                   setIsDrawerOpen(!isDrawerOpen)
                 } else {
@@ -412,13 +413,15 @@ export function App() {
                 }
               }}
               disabled={availableTargets.length === 0 && !isConverting}
-              className={`btn-primary app-convert-btn ${
-                availableTargets.length === 0 && !isConverting
-                  ? ''
-                  : isConverting
-                    ? 'btn-converting'
-                    : ''
-              } ${allFilesConverted ? 'app-convert-btn--hidden' : 'app-convert-btn--visible'}`}
+              className={`app-convert-btn ${
+                allFilesConverted
+                  ? 'app-convert-btn--morphed'
+                  : availableTargets.length === 0 && !isConverting
+                    ? ''
+                    : isConverting
+                      ? 'btn-converting'
+                      : 'btn-primary'
+              }`}
             >
               {showProgressBackground && (
                 <motion.div
@@ -428,94 +431,64 @@ export function App() {
                   transition={{ duration: 0.3 }}
                 />
               )}
+              
+              {/* Icon - always visible */}
               {isConverting ? (
-                <span className="btn-content">
-                  <svg
-                    className="btn-icon animate-spin"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Converting... {Math.round(overallProgress)}%
-                </span>
-              ) : selectedTargetFormat ? (
-                <span className="btn-content">
-                  <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                  Convert
-                </span>
-              ) : (
-                <span className="btn-content">
-                  <svg
-                    className="btn-icon"
+                <svg
+                  className="btn-icon animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
                     fill="currentColor"
-                    viewBox="0 -960 960 960"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M480-480ZM202-65l-56-57 118-118h-90v-80h226v226h-80v-89L202-65Zm278-15v-80h240v-440H520v-200H240v400h-80v-400q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H480Z" />
-                  </svg>
-                  Pick filetype
-                </span>
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : allFilesConverted || selectedTargetFormat ? (
+                <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="btn-icon"
+                  fill="currentColor"
+                  viewBox="0 -960 960 960"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M480-480ZM202-65l-56-57 118-118h-90v-80h226v226h-80v-89L202-65Zm278-15v-80h240v-440H520v-200H240v400h-80v-400q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H480Z" />
+                </svg>
               )}
-            </motion.button>
-
-            {/* Convert Again Button - Slides in from left when files completed */}
-            <motion.button
-              layout
-              animate={{
-                width: allFilesConverted ? BUTTON_HEIGHT : 0,
-                opacity: allFilesConverted ? 1 : 0,
-                paddingLeft: allFilesConverted ? 0 : 0,
-                paddingRight: allFilesConverted ? 0 : 0,
-                paddingTop: allFilesConverted ? 0 : 0,
-                paddingBottom: allFilesConverted ? 0 : 0,
-                borderWidth: allFilesConverted ? 1 : 0,
-                marginLeft: 0,
-                marginRight: 0,
-              }}
-              transition={layoutTransition}
-              onClick={() => {
-                if (isConverting) {
-                  cancelConversion()
-                  addToast({
-                    type: 'info',
-                    message: 'Conversion cancelled',
-                  })
-                } else {
-                  handleConvert()
-                }
-              }}
-              disabled={!canConvert && !isConverting}
-              className={`app-convert-again-btn ${allFilesConverted ? 'app-convert-again-btn--visible' : 'app-convert-again-btn--hidden'}`}
-            >
-              <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
+              
+              {/* Text content - fades out when morphing, removed from DOM when morphed */}
+              {!allFilesConverted && (
+                <motion.span
+                  className="btn-text"
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={layoutTransition}
+                >
+                  {isConverting
+                    ? `Converting... ${Math.round(overallProgress)}%`
+                    : selectedTargetFormat
+                      ? 'Convert'
+                      : 'Pick filetype'}
+                </motion.span>
+              )}
             </motion.button>
 
             {/* Download Button - Slides in from right when files completed */}
