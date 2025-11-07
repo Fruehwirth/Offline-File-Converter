@@ -43,25 +43,14 @@ export function createThrottledProgress(
   callback: (progress: any) => void,
   intervalMs: number = 100 // Default: max 10 updates per second
 ): (progress: any) => void {
-  let lastProgress: any = null
-  let timeoutId: ReturnType<typeof setTimeout> | null = null
-
   const throttled = throttle((progress: any) => {
-    lastProgress = progress
     callback(progress)
   }, intervalMs)
 
   // Return wrapper that always captures 100% completion immediately
   return (progress: any) => {
-    lastProgress = progress
-
     // Always report 100% immediately (no throttling for completion)
     if (progress.percent === 100 || progress.percent >= 99.9) {
-      // Cancel any pending throttled update
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-        timeoutId = null
-      }
       callback(progress)
     } else {
       throttled(progress)
