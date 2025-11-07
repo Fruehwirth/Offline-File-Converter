@@ -13,9 +13,24 @@
   padding: 1rem;
   min-width: 200px;
   max-width: 280px;
-  background-color: rgba(30, 30, 30, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* Theme-aware background colors */
+:root .format-tooltip,
+[data-theme='light'] .format-tooltip {
+  background-color: rgba(248, 250, 252, 0.75);
+}
+
+[data-theme='dark'] .format-tooltip {
+  background-color: rgba(30, 30, 30, 0.75);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .format-tooltip {
+    background-color: rgba(30, 30, 30, 0.75);
+  }
 }
 
 .format-tooltip__icon {

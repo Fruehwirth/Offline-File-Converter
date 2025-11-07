@@ -64,7 +64,7 @@ export function EmptyState() {
           flex flex-col items-center justify-center min-h-[400px] text-center px-4
           md:border-2 md:border-dashed md:rounded-brand-lg md:p-8 transition-colors
           w-full min-w-[280px] max-w-[700px]
-          md:bg-gray-100 md:dark:bg-black/20 md:hover:bg-gray-200 md:dark:hover:bg-black/30
+          md:bg-gray-100 md:dark:bg-black/20 md:hover:bg-[#eef0f2] md:dark:hover:bg-black/30
           ${
             isDragging
               ? 'md:border-brand-accent md:bg-brand-accent/5'
