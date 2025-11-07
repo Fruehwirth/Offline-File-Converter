@@ -97,6 +97,15 @@
   padding: 1rem;
 }
 
+/* Light mode: subtle grayish tint */
+[data-theme='light'] .btn-download {
+  background-color: #e6e6e6;
+}
+
+[data-theme='light'] .btn-download:hover {
+  background-color: #cdcfd3;
+}
+
 .btn-download:hover {
   background-color: var(--color-bg-hover);
 }
@@ -123,8 +132,8 @@
 }
 
 .btn-converting:hover {
-  background-color: #ef4444 !important;
-  color: #6b7280 !important;
+  background-color: #6b7280 !important;
+  color: white !important;
 }
 
 [data-theme='dark'] .btn-converting {
@@ -132,7 +141,8 @@
 }
 
 [data-theme='dark'] .btn-converting:hover {
-  background-color: #dc2626 !important;
+  background-color: #4b5563 !important;
+  color: white !important;
 }
 
 /* Button icon styles */
