@@ -72,6 +72,7 @@ export async function convertImage(
         const blob = new Blob([data], { type: mimeType })
         worker.terminate()
         abortSignal?.removeEventListener('abort', onAbort)
+        onProgress?.({ percent: 100 })
         resolve(blob)
       } else if (type === 'error') {
         worker.terminate()

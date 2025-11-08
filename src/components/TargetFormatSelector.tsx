@@ -72,7 +72,14 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
     // If all same format, filter it out from available targets
     if (allSameFormat) {
       const commonSourceFormat = sourceFormats[0]
-      return availableTargets.filter(target => target !== commonSourceFormat)
+      
+      // Special handling for JPEG/JPG equivalence
+      // Since they're the same format with different extensions, filter out both
+      const formatsToExclude = new Set([commonSourceFormat])
+      if (commonSourceFormat === 'jpeg') formatsToExclude.add('jpg')
+      if (commonSourceFormat === 'jpg') formatsToExclude.add('jpeg')
+      
+      return availableTargets.filter(target => !formatsToExclude.has(target))
     }
 
     return availableTargets

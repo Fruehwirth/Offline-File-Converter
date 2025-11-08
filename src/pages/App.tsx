@@ -222,6 +222,10 @@ export function App() {
         const actualFormat = detectFormatFromMime(blob.type) || targetFormat
         const filename = generateOutputFilename(fileItem.file.name, actualFormat)
 
+        // Explicitly set progress to 100% before marking as completed
+        // This ensures the progress bar visually reaches 100% even with throttled updates
+        updateFileStatus(fileItem.id, 'processing', 100)
+
         console.log(
           `[App] Setting file result for ${fileItem.file.name} (${fileItem.id}) - marking as completed`
         )
