@@ -8,87 +8,62 @@ description: 'Interactive audio preview feature with 3D flip animation, real-tim
 
 Interactive audio preview for audio files in the file list. Hover over audio file icons to flip and play the audio at 25% volume with fade effects and live waveform visualization.
 
-## Visual Feedback
+## Visual Requirements
 
-- **3D Flip Animation**: 500ms card flip using CSS 3D transforms
-- **Real-Time Waveform**: 7 vertical bars showing actual audio frequency spectrum
-- **Web Audio API**: Analyzes and displays live audio data using AnalyserNode
-- **Hover State**: Clear visual indication when audio is playing
+- **3D Flip Animation**: Smooth card flip effect using CSS 3D transforms on hover
+- **Real-Time Waveform**: Multiple vertical bars showing actual audio frequency spectrum
+- **Frequency Analysis**: Use Web Audio API to analyze and visualize live audio data
+- **Hover State**: Clear visual indication during audio playback
 
-## Audio Playback
+## Audio Playback Behavior
 
-- **Volume**: Fixed 25% maximum for quiet preview
-- **Fade In**: 0% → 25% over 1 second
-- **Fade Out**: 25% → 0% over 0.4 seconds
-- **Loop**: Audio loops while hovering
-- **Auto-pause**: Stops when cursor moves away
-- **Failsafe**: Automatic cleanup ensures audio stops after 500ms
+- **Volume**: Low, non-intrusive volume level for preview
+- **Fade In**: Gradual volume increase from silence to preview level
+- **Fade Out**: Quick volume decrease when hover ends
+- **Loop**: Audio repeats continuously while hovering
+- **Auto-pause**: Playback stops when user moves cursor away
+- **Failsafe**: Cleanup mechanisms ensure audio always stops properly
 
-## Performance
+## Performance Requirements
 
-- **Lazy Loading**: Audio URLs created only on mount
-- **Cleanup**: Proper cleanup of audio elements, contexts, and object URLs
-- **requestAnimationFrame**: Efficient fade animations and waveform updates
-- **No Memory Leaks**: All event listeners, animation frames, and audio contexts cleaned up
-- **Race Condition Protection**: Uses refs to track hover state
-- **Efficient FFT**: Small FFT size (256) for real-time analysis with minimal CPU
+- **Lazy Loading**: Audio resources created only when needed
+- **Resource Cleanup**: Proper disposal of audio elements, contexts, and URLs
+- **Efficient Animation**: Use optimized animation techniques (requestAnimationFrame)
+- **Memory Management**: No memory leaks from event listeners or contexts
+- **State Protection**: Prevent race conditions during rapid hover changes
+- **Optimized Analysis**: Use efficient FFT settings for real-time frequency analysis
 
 ## Supported Formats
 
-- MP3 (audio/mpeg)
-- WAV (audio/wav)
-- FLAC (audio/flac)
-- OGG (audio/ogg)
-- AAC (audio/aac)
-- M4A (audio/mp4)
+All standard audio formats supported by the application (MP3, WAV, FLAC, OGG, AAC, M4A)
 
-## Implementation
+## Component Architecture
 
-### Component Structure
+### Structure
 
-```
-AudioPreviewIcon
-├── Audio Element (hidden, controls playback)
-├── Web Audio API
-│   ├── AudioContext (audio processing pipeline)
-│   ├── AnalyserNode (frequency analysis, FFT size 256)
-│   └── MediaElementSource (audio input)
-├── Flip Container (3D transform container)
-│   ├── Front Side (FileTypeIcon)
-│   └── Back Side (Real-time waveform - 7 frequency bars)
-└── State Management
-    ├── isHovering (hover state)
-    ├── waveformData (7-element array of frequency values)
-    └── Various refs for audio/animation control
-```
+- Audio playback element (hidden from view)
+- Web Audio API pipeline for frequency analysis
+- Flip container with 3D transform capability
+  - Front side: Normal file icon
+  - Back side: Live waveform visualization
+- State management for hover and playback control
 
-### Animation Details
-
-- **Flip**: `rotateY(0deg)` → `rotateY(180deg)` with `transition: 500ms ease-out`
-- **Waveform**: 7 bars, real-time updates at 60fps, smooth transitions with 75ms CSS duration
-- **Fade In**: Linear volume adjustment at 60fps from 0% to 25% over 1 second
-- **Fade Out**: Linear volume adjustment at 60fps from 25% to 0% over 0.4 seconds
-
-### User Flow
+### Behavioral Flow
 
 1. User hovers over audio file icon
-2. Icon flips revealing live waveform (7 bars)
-3. Audio starts from beginning
-4. Volume fades in over 1 second
-5. Waveform animates in real-time with actual audio frequencies
-6. Audio loops while hovering
-7. On mouse leave, volume fades out over 0.4 seconds
-8. Icon flips back
-9. Audio stopped and reset to beginning
+2. Icon flips to reveal live waveform visualization
+3. Audio playback begins from start
+4. Volume gradually increases to preview level
+5. Waveform bars animate based on actual audio frequencies
+6. Audio loops continuously during hover
+7. On mouse leave, volume quickly fades out
+8. Icon flips back to original state
+9. Audio playback stops and resets
 
-## Browser Compatibility
+## Technical Requirements
 
-Requires: HTML5 Audio API, CSS 3D Transforms, requestAnimationFrame, URL.createObjectURL
-
-All modern browsers (Chrome, Firefox, Safari, Edge) fully supported.
-
-## Files
-
-- `src/components/AudioPreviewIcon.tsx` - Main component
-- `src/components/FileList.tsx` - Integration point
-- `src/css/components/audio-preview-icon.css` - Styles
+- HTML5 Audio API support
+- CSS 3D Transform support
+- requestAnimationFrame support
+- Object URL creation capability
+- Modern browser compatibility (Chrome, Firefox, Safari, Edge)

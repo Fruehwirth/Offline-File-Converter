@@ -1,0 +1,162 @@
+---
+description: 'Best practices for smooth button width animations and transitions. Apply when implementing dynamic button systems with sliding/morphing animations.'
+alwaysApply: false
+---
+
+# Button Animation Best Practices
+
+## Overview
+
+Guidelines for implementing smooth, jank-free button animations, especially for width-based sliding transitions.
+
+## Key Principles
+
+### 1. Explicit Width Calculations
+
+**Problem**: Using percentage widths with flexbox during animations causes visual snapping and jank.
+
+**Solution**: 
+- Use explicit width calculations (calc()) for animated elements
+- Avoid mixing `width: '100%'` with `flexGrow` during transitions
+- Calculate exact pixel values: `calc(100% - fixedWidth - gap)`
+
+### 2. Right-Aligned Button Container
+
+**Problem**: Buttons moving horizontally during width transitions looks janky.
+
+**Solution**:
+- Use `justify-content: flex-end` on button container
+- Anchor primary button to right edge
+- Let secondary buttons slide in from left while primary shrinks from left
+- Right edge of primary button stays fixed during transitions
+
+### 3. Consistent Animation Timing
+
+**Problem**: Different animation types (spring vs. ease-out) cause desynchronization.
+
+**Solution**:
+- Use same timing function for all simultaneous animations
+- Prefer `cubic-bezier(0.4, 0, 0.2, 1)` over spring physics
+- Keep duration consistent across all animating buttons
+- Recommended: 300ms duration for smooth yet snappy feel
+
+### 4. Conditional vs. Always-Rendered
+
+**Problem**: Mount/unmount cycles cause timing issues with animations.
+
+**Solution**:
+- Keep buttons in DOM, animate to width: 0 instead of unmounting
+- Use `overflow: hidden` on collapsed buttons
+- Set all spacing properties to 0 when collapsed (width, padding, margin, border)
+- Add `flexShrink: 0` to prevent unwanted compression
+
+### 5. CSS Transitions vs. Framer Motion
+
+**Problem**: Mixing animation libraries causes complexity and timing issues.
+
+**Solution**:
+- Use Framer Motion `animate` for properties that need orchestration
+- Use CSS transitions (via `style.transition`) for simple width changes
+- Avoid animating between 'auto' and pixel values - causes jank
+- For instant updates without animation, use `transition: 'none'`
+
+## Common Patterns
+
+### Sliding Button with Fixed Anchor
+
+```typescript
+// Container
+<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+// Button that slides in from left
+<motion.button
+  animate={{
+    width: visible ? buttonSize : 0,
+    opacity: visible ? 1 : 0,
+    marginRight: visible ? gap : 0,
+  }}
+  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+/>
+
+// Primary button anchored to right, shrinks from left
+<button
+  style={{
+    width: secondaryVisible ? `calc(100% - ${buttonSize} - ${gap})` : '100%',
+    transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    flexShrink: 0,
+  }}
+/>
+```
+
+### Circular Button Morphing
+
+```typescript
+<motion.button
+  animate={{
+    width: circular ? circularSize : '100%',
+    padding: circular ? 0 : normalPadding,
+    borderWidth: circular ? 1 : 0,
+  }}
+  style={{
+    flexShrink: circular ? 0 : 1,
+  }}
+/>
+```
+
+## Anti-Patterns to Avoid
+
+### ❌ Percentage Width with Animated Siblings
+
+```typescript
+// Bad - causes jank
+<motion.button style={{ width: '100%', flexGrow: 1 }} />
+```
+
+### ❌ Animating 'auto' Width
+
+```typescript
+// Bad - browser can't interpolate
+animate={{ width: expanded ? 'auto' : buttonSize }}
+```
+
+### ❌ Conditional Rendering with Animations
+
+```typescript
+// Bad - mount/unmount causes timing issues
+{showButton && <motion.button animate={{ width: buttonSize }} />}
+```
+
+### ❌ Mixed Animation Timing
+
+```typescript
+// Bad - different timing causes desync
+<motion.button transition={{ type: 'spring' }} />
+<motion.button transition={{ duration: 0.3 }} />
+```
+
+## Debugging Checklist
+
+When button animations are janky:
+
+1. **Check container layout**: Is `justify-content` set correctly?
+2. **Verify flexShrink**: Are all buttons using `flexShrink: 0` for fixed sizes?
+3. **Inspect transitions**: Are all transitions using same duration/timing?
+4. **Look for 'auto' values**: Replace with explicit calculations
+5. **Check for mount/unmount**: Keep elements in DOM, animate to 0 instead
+6. **Verify calc() accuracy**: Account for all spacing (gaps, margins, borders)
+7. **Test transition property**: Ensure CSS transitions match animation state
+
+## Performance Considerations
+
+- Prefer `transform` and `opacity` for best performance
+- Width animations are acceptable for modern browsers (60fps achievable)
+- Use `will-change: width` sparingly and only during actual animation
+- Remove `will-change` after animation completes
+- Avoid animating layout-triggering properties on many elements simultaneously
+
+## Accessibility
+
+- Maintain keyboard focus during transitions
+- Ensure animations respect `prefers-reduced-motion`
+- Don't hide important content during collapse animations
+- Disabled states must be clearly indicated regardless of animation state

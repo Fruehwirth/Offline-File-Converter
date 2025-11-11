@@ -26,10 +26,8 @@ import { createThrottledProgress } from '../utils/throttle'
 const BUTTON_HEIGHT = '72px'
 
 const layoutTransition = {
-  type: 'spring',
-  stiffness: 400,
-  damping: 35,
-  mass: 0.8,
+  duration: 0.3,
+  ease: [0.4, 0, 0.2, 1],
 }
 
 /**
@@ -120,6 +118,9 @@ export function App() {
     // If all files were converted, user clicked "Convert again"
     // Replace converted files with their results first
     if (allFilesConverted) {
+      // Clear the selected target format immediately to prevent layout flash
+      useConversionStore.getState().setSelectedTargetFormat(null)
+      
       const convertedFiles = files.filter(f => f.status === 'completed' && f.result)
       convertedFiles.forEach(f => replaceFileWithResult(f.id))
 
@@ -133,8 +134,6 @@ export function App() {
 
         const commonTargets = findCommonTargets(sourceFormats)
         setAvailableTargets(commonTargets)
-        // Clear the selected target format so user needs to choose again
-        useConversionStore.getState().setSelectedTargetFormat(null)
       }, 0)
 
       // Reset the allFilesConverted flag so the TargetFormatSelector shows again
@@ -384,7 +383,7 @@ export function App() {
         <div className="bottom-section__container">
           {/* Drawer Container - Behind buttons, grows upward with animation */}
           <div
-            className={`drawer ${isDrawerOpen && !selectedTargetFormat && availableTargets.length > 0 ? 'drawer--open' : 'drawer--closed'}`}
+            className={`drawer ${isDrawerOpen && !allFilesConverted && availableTargets.length > 0 ? 'drawer--open' : 'drawer--closed'}`}
           >
             <div className="drawer__content">
               <TargetFormatSelector disabled={isConverting} />
@@ -393,11 +392,54 @@ export function App() {
 
           {/* Dynamic Button Container with smooth width sliding */}
           <div className="button-container">
+            {/* Change Format Button - Slides in from left when format is selected */}
+            <motion.button
+              animate={{
+                width: selectedTargetFormat && !allFilesConverted ? BUTTON_HEIGHT : 0,
+                opacity: selectedTargetFormat && !allFilesConverted ? 1 : 0,
+                marginRight: selectedTargetFormat && !allFilesConverted ? '0.75rem' : 0,
+              }}
+              transition={layoutTransition}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsDrawerOpen(!isDrawerOpen)
+              }}
+              disabled={!selectedTargetFormat || allFilesConverted}
+              className="btn-secondary"
+              style={{ 
+                padding: 0,
+                height: BUTTON_HEIGHT,
+                flexShrink: 0,
+                overflow: 'hidden',
+              }}
+              aria-label="Change file type"
+            >
+              <motion.svg
+                className="btn-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                animate={{
+                  rotate: isDrawerOpen ? 180 : 0,
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
+              </motion.svg>
+            </motion.button>
+
             {/* Main Convert/Convert Again Button - Morphs from full width to circular */}
             <motion.button
-              layout
               animate={{
-                width: allFilesConverted ? BUTTON_HEIGHT : '100%',
                 paddingLeft: allFilesConverted ? 0 : '1rem',
                 paddingRight: allFilesConverted ? 0 : '1rem',
                 paddingTop: allFilesConverted ? 0 : 0,
@@ -433,6 +475,15 @@ export function App() {
                       ? 'btn-converting'
                       : 'btn-primary'
               }`}
+              style={{
+                width: allFilesConverted 
+                  ? BUTTON_HEIGHT 
+                  : selectedTargetFormat && !allFilesConverted
+                    ? `calc(100% - ${BUTTON_HEIGHT} - 0.75rem)`
+                    : '100%',
+                flexShrink: 0,
+                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
             >
               {showProgressBackground && (
                 <motion.div
@@ -499,7 +550,7 @@ export function App() {
                   {isConverting
                     ? `Converting... ${Math.round(overallProgress)}%`
                     : selectedTargetFormat
-                      ? 'Convert'
+                      ? `Convert to .${selectedTargetFormat}`
                       : 'Pick filetype'}
                 </motion.span>
               )}
@@ -507,10 +558,8 @@ export function App() {
 
             {/* Download Button - Slides in from right when files completed */}
             <motion.button
-              layout
               animate={{
-                width: allFilesConverted ? 'auto' : 0,
-                flexGrow: allFilesConverted ? 1 : 0,
+                width: allFilesConverted ? `calc(100% - ${BUTTON_HEIGHT} - 0.75rem)` : 0,
                 opacity: allFilesConverted ? 1 : 0,
                 paddingLeft: allFilesConverted ? '1rem' : 0,
                 paddingRight: allFilesConverted ? '1rem' : 0,
@@ -518,7 +567,6 @@ export function App() {
                 paddingBottom: allFilesConverted ? '1rem' : 0,
                 borderWidth: allFilesConverted ? 1 : 0,
                 marginLeft: allFilesConverted ? '0.75rem' : 0,
-                marginRight: 0,
               }}
               transition={layoutTransition}
               onClick={async () => {
@@ -546,6 +594,9 @@ export function App() {
               }}
               disabled={isDownloading}
               className={`btn-download app-download-btn ${allFilesConverted ? 'app-download-btn--visible' : 'app-download-btn--hidden'}`}
+              style={{
+                flexShrink: 0,
+              }}
             >
               {isDownloading && (
                 <motion.div

@@ -8,108 +8,70 @@ description: 'Concurrent file conversion processing and smart transcoding warnin
 
 Enables simultaneous conversion of multiple files with intelligent quality warnings for lossy-to-lossy audio transcoding.
 
-## Smart Format Detection
+## Smart Format Detection Requirements
 
-**Utility:** `audioFormatUtils.ts`
+System must detect and categorize audio formats by compression type:
 
-- **Lossy Detection**: Identifies lossy formats (MP3, AAC, M4A, OGG)
-- **Lossless Detection**: Identifies lossless formats (WAV, FLAC)
-- **Transcoding Detection**: Warns when converting between lossy formats
-- **Warning Generation**: User-friendly quality degradation messages
+- **Lossy Format Detection**: Identify formats that use lossy compression
+- **Lossless Format Detection**: Identify formats that preserve original quality
+- **Transcoding Detection**: Detect when converting between incompatible formats
+- **Warning Generation**: Provide user-friendly messages about quality implications
 
 ### Warning Scenarios
 
-- **Lossy → Lossy**: ⚠️ Warning about generation loss (e.g., MP3 → M4A)
-- **Lossless → Lossy**: ℹ️ Info about compression (optimal workflow)
-- **Lossy → Lossless**: ℹ️ No quality gain (file size increase only)
-- **Lossless → Lossless**: No warning (no quality loss)
+- **Lossy → Lossy**: Critical warning about cumulative quality loss (generation loss)
+- **Lossless → Lossy**: Informational notice about intentional compression
+- **Lossy → Lossless**: Informational notice that quality cannot be recovered
+- **Lossless → Lossless**: No warning (quality preserved)
 
-## Concurrent Processing
+## Concurrent Processing Architecture
 
-### Architecture
+### Requirements
 
-- **Before**: Sequential processing (one file at a time)
-- **After**: Concurrent processing (multiple files simultaneously)
-
-### Implementation
-
-- Uses `Promise.allSettled()` to process all files in parallel
+- Multiple files must convert simultaneously, not sequentially
 - Each file maintains independent progress tracking
-- Better system resource utilization (CPU, GPU, hardware acceleration)
-- Faster overall conversion times
+- System resources (CPU, GPU, hardware acceleration) utilized efficiently
+- Overall conversion time reduced for batch operations
 
 ### Benefits
 
-- **Speed**: Multiple files convert simultaneously
-- **Efficiency**: Better CPU/resource utilization
-- **UX**: See progress on all files at once
+- **Speed**: Parallel processing reduces total conversion time
+- **Efficiency**: Better utilization of multi-core processors
+- **User Experience**: Real-time progress for all files simultaneously
 
-## UI Enhancements
+## UI Requirements
 
-### FileList Component
+### File List Display
 
-- **Processing Counter**: Shows currently converting file count
-- **Status Summary**: Real-time counts (processing/completed/queued/failed)
-- **Individual Progress**: Each file shows progress bar and percentage
-- **Status Indicators**: Visual dots with animations
-  - 🔵 Blue pulsing = Processing
-  - 🟢 Green = Completed
-  - ⚪ Gray = Queued
-  - 🔴 Red = Failed
+- **Processing Counter**: Display count of files currently converting
+- **Status Summary**: Real-time counts for all file states
+- **Individual Progress**: Each file shows its own progress indicator and percentage
+- **Status Visualization**: Color-coded indicators with appropriate animations
+  - Active processing: Animated indicator
+  - Completed: Success indicator
+  - Queued: Pending indicator
+  - Failed: Error indicator
 
-### TargetFormatSelector Component
+### Format Selector Warnings
 
-- **Inline Warnings**: Shows transcoding warnings for lossy target formats
-- **Visual Feedback**: Yellow warning box with icon and detailed message
-- **Context-Aware**: Only shows when applicable to current files
+- **Inline Warnings**: Display transcoding warnings when selecting lossy formats
+- **Visual Feedback**: Prominent warning display with clear messaging
+- **Context-Aware**: Only display warnings relevant to current file selection
 
-## Conversion Flow
+## Conversion Flow Requirements
 
-**App.tsx:**
+### Core Conversion Logic
 
-- Refactored `handleConvert()` for concurrent processing
-- Transcoding warning toast before conversion starts
-- Maintains error handling and progress tracking
-- Compatible with both image and audio conversions
+- Process multiple files concurrently using parallel execution
+- Display transcoding warnings before conversion begins
+- Maintain comprehensive error handling for individual file failures
+- Track progress independently for each file
+- Support both image and audio conversion workflows
 
-## Example
+## Performance Requirements
 
-### Sequential (Before)
-
-```
-File 1: [=====>    ] 50%
-File 2: [          ] 0%  (waiting)
-File 3: [          ] 0%  (waiting)
-```
-
-### Concurrent (After)
-
-```
-File 1: [=====>    ] 50%
-File 2: [===>      ] 30%  (processing)
-File 3: [==        ] 20%  (processing)
-```
-
-### Transcoding Warning
-
-When converting MP3 → M4A:
-
-```
-⚠️ Quality loss: Converting MP3 → M4A is lossy-to-lossy transcoding.
-   For best quality, convert from original lossless sources (WAV, FLAC).
-```
-
-## Performance
-
-- Web Workers handle heavy processing (no main thread blocking)
-- Concurrent processing leverages multi-core CPUs
-- Efficient state updates for progress tracking
-- No memory leaks (proper cleanup in `Promise.allSettled`)
-
-## Files
-
-- `src/features/conversion/audioFormatUtils.ts` - Format detection utilities
-- `src/__tests__/audioFormatUtils.test.ts` - Tests
-- `src/pages/App.tsx` - Concurrent conversion logic
-- `src/components/FileList.tsx` - Enhanced status display
-- `src/components/TargetFormatSelector.tsx` - Transcoding warnings
+- Heavy processing offloaded to background threads (Web Workers)
+- Concurrent processing leverages multi-core CPU architecture
+- Efficient state management for real-time progress updates
+- Proper resource cleanup to prevent memory leaks
+- Graceful handling of individual file failures without blocking others

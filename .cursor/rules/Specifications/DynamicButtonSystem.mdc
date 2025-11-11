@@ -15,25 +15,32 @@ The application requires a dynamic button system that smoothly transitions betwe
 
 The button system must support multiple configurations that appear based on application state:
 
-- **Initial State**: Single full-width action button
-- **Processing State**: Button shows progress indication while maintaining full width
-- **Completed State**: Two buttons appear - a fixed-width icon button and a flexible-width action button
+- **Initial State**: Single full-width action button (no target format selected)
+- **Selection State**: Circular icon button slides in from left, action button shrinks from left edge
+- **Processing State**: Button shows progress indication while maintaining width
+- **Completed State**: Two buttons appear - a fixed-width circular icon button and a flexible-width action button
 
 ### CR-2: Width-Based Sliding Animations
 
 **Requirement**: Buttons must slide horizontally during state transitions
 
 - Transitions occur via smooth width changes, not scale/bounce effects
-- Animation must be physics-based with spring characteristics
-- Height remains constant (72px) during all transitions
+- Animation uses ease-out cubic-bezier timing function
+- Height remains constant throughout all transitions
 - No vertical movement or layout shift
 
 **Animation Parameters**:
 
-- Spring stiffness: 300-400
-- Damping: 30-35
-- Mass: 0.5-0.8
+- Duration: 300ms
+- Timing: cubic-bezier(0.4, 0, 0.2, 1) - ease-out curve
 - Target: Buttery smooth, 60fps performance
+
+**Layout Behavior**:
+
+- Container uses `justify-content: flex-end` to right-align buttons
+- Primary button stays anchored to right edge during transitions
+- Secondary buttons slide in from left, primary button shrinks from left edge
+- Right edge of primary button never moves during format button appearance
 
 ### CR-3: Zero-Space Collapse
 
@@ -94,20 +101,36 @@ All buttons must have maximum rounded corners (fully pill-shaped) in all states
 **Purpose**: Main conversion/action trigger
 **States**:
 
-- Visible: Not all files converted
-- Collapsed: All files converted
-  **Width**: 100% of container when visible
-  **Content**: Icon + text label (except when showing progress)
+- Full Width: No target format selected or all files converted
+- Reduced Width: Target format selected (shrinks from left to accommodate format selection button)
+- Circular: All files completed (Convert Again)
+  **Width**: 
+  - 100% when no format button visible
+  - Calculated remaining space when format button visible
+  - Fixed size when circular
+  **Content**: Icon + dynamic text label showing selected format
+
+### Format Selection Button
+
+**Purpose**: Re-open format picker to change selected format
+**States**:
+
+- Collapsed: No target format selected or files completed
+- Visible: Target format selected and conversion not complete
+  **Width**: Fixed circular size (equal to container height)
+  **Content**: Upward-pointing arrow icon that rotates 180° when format picker is open
+  **Animation**: Slides in from left when format selected
+  **Interaction**: Opens/closes format picker drawer, arrow rotates to indicate state
 
 ### Icon Action Button (Convert Again)
 
-**Purpose**: Trigger repeat conversion
+**Purpose**: Trigger repeat conversion after completion
 **States**:
 
-- Collapsed: Not all files converted
+- Collapsed: Files not all converted
 - Visible: All files converted
-  **Width**: Fixed 72px (square, equal to height)
-  **Content**: Icon only, centered
+  **Width**: Fixed circular size (equal to container height)
+  **Content**: Circular arrow icon, centered
 
 ### Secondary Action Button (Download)
 
@@ -116,31 +139,49 @@ All buttons must have maximum rounded corners (fully pill-shaped) in all states
 
 - Collapsed: Not all files converted
 - Visible: All files converted
-  **Width**: Flexible, fills remaining space after icon button + gap
+  **Width**: Calculated remaining space after icon button and gap
   **Content**: Icon + text label
 
 ## Animation Sequence
 
-### Transition: Single Button → Two Buttons
+### Transition: Format Selected (Full Width → With Format Button)
 
-1. Primary button width animates from 100% to 0
-2. Primary button padding/margin/border animate to 0
-3. Primary button opacity fades to 0
-4. Simultaneously:
-   - Icon button width animates from 0 to 72px
-   - Icon button padding/border animate to visible values
-   - Icon button opacity fades to 1
-5. Simultaneously:
-   - Secondary button width animates from 0 to flex-fill
-   - Secondary button padding/border animate to visible values
-   - Secondary button margin-left animates to 12px (gap)
-   - Secondary button opacity fades to 1
+1. Format selection button animates in from left:
+   - Width animates from 0 to circular size
+   - Opacity fades from 0 to 1
+   - Margin-right animates from 0 to gap size
+2. Simultaneously, primary button:
+   - Width changes via CSS (no animation) to calculated remaining space
+   - Stays anchored to right edge
+   - Content updates to show selected format
 
-**Timing**: All animations occur simultaneously with spring physics
+**Timing**: Format button slides in smoothly while primary button width adjusts instantly
 
-### Transition: Two Buttons → Single Button
+### Transition: Conversion Complete (Single/Dual → Download State)
 
-Reverse of above sequence
+1. Primary button morphs to circular:
+   - Width animates to circular size
+   - Padding animates to 0
+   - Content switches to icon only
+2. Format button collapses (if visible):
+   - Width animates to 0
+   - Opacity fades to 0
+   - Margin animates to 0
+3. Download button slides in from right:
+   - Width animates from 0 to calculated space
+   - Padding animates in
+   - Margin-left animates to gap size
+   - Opacity fades to 1
+
+**Timing**: All animations occur simultaneously over same duration
+
+### Transition: Convert Again (Download State → Format Selection)
+
+1. Download and circular buttons collapse to 0
+2. Primary button expands back to full width
+3. Format picker reopens for new selection
+
+**Timing**: Smooth reversal of previous transitions
 
 ## Layout Container Requirements
 
