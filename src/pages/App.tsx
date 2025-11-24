@@ -390,6 +390,9 @@ export function App() {
             </div>
           </div>
 
+          {/* Gradient overlay - fades drawer into background */}
+          <div className="gradient-overlay" />
+
           {/* Dynamic Button Container with smooth width sliding */}
           <div className="button-container">
             {/* Change Format Button - Slides in from left when format is selected */}

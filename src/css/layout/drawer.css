@@ -76,35 +76,29 @@
 
 .drawer--closed .drawer__content {
   max-height: 0;
-  border-width: 0;
-  border-color: transparent;
   box-shadow: none;
   overflow: hidden;
   visibility: hidden;
   transition:
     max-height 300ms ease-out,
-    border-width 300ms ease-out,
-    border-color 300ms ease-out,
     visibility 0s 300ms; /* Delayed - stays visible during closing animation */
 }
 
 .drawer--open .drawer__content {
   max-height: 600px;
-  border-width: 1px;
-  border-color: var(--color-border);
-  border-style: solid;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow-y: auto;
   overflow-x: hidden;
   visibility: visible;
   transition:
     max-height 300ms ease-out,
-    border-width 300ms ease-out,
-    border-color 300ms ease-out,
     visibility 0s 0s; /* Immediate when opening */
   /* Hide scrollbar */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  /* Mask to hide shadow at bottom where gradient overlay fades */
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 36px), transparent 100%);
+  mask-image: linear-gradient(to bottom, black calc(100% - 36px), transparent 100%);
 }
 
 /* Hide scrollbar for Chrome/Safari/Opera */
@@ -117,6 +111,18 @@
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Gradient overlay - sits between drawer and buttons */
+.gradient-overlay {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 36px; /* Top half of button (72px / 2) */
+  height: 36px; /* Half of button height */
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+  z-index: 15;
+  pointer-events: none;
 }
 
 /* Button container */

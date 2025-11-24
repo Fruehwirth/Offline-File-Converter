@@ -129,7 +129,7 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
       {/* Format selector */}
       <div className={`space-y-3 w-full ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="flex items-center gap-3">
-          <label className="block text-lg font-bold text-brand-text">Convert to</label>
+          <label className="block text-2xl font-bold text-brand-text" style={{ marginLeft: '8px' }}>Convert to</label>
         </div>
 
         <div className="flex flex-wrap gap-2 w-full">
@@ -154,11 +154,8 @@ export function TargetFormatSelector({ disabled = false }: TargetFormatSelectorP
           ))}
         </div>
 
-        {filteredTargets.length > 1 && (
-          <p className="text-xs text-brand-text-secondary mt-3">
-            All selected files can be converted to these formats
-          </p>
-        )}
+        {/* Fixed spacing at bottom of drawer */}
+        <div style={{ height: '20px' }} />
       </div>
     </div>
   )
