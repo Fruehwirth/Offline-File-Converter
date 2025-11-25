@@ -21,16 +21,13 @@ export function InstallButton() {
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       const isIOSStandalone = (window.navigator as any).standalone === true
-      const installed = isStandalone || isIOSStandalone
-      setIsInstalled(installed)
-      console.log('PWA Install Check:', { isStandalone, isIOSStandalone, installed })
+      setIsInstalled(isStandalone || isIOSStandalone)
     }
 
     checkInstalled()
 
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired!')
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault()
       // Stash the event so it can be triggered later
@@ -40,7 +37,6 @@ export function InstallButton() {
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('App installed!')
       setDeferredPrompt(null)
       setIsInstallable(false)
       setIsInstalled(true)
@@ -48,8 +44,6 @@ export function InstallButton() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
-
-    console.log('InstallButton: Listeners attached, waiting for beforeinstallprompt...')
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -78,9 +72,6 @@ export function InstallButton() {
     setDeferredPrompt(null)
     setIsInstallable(false)
   }
-
-  // Show button state for debugging
-  console.log('InstallButton render:', { isInstalled, isInstallable, hasDeferredPrompt: !!deferredPrompt })
 
   // Don't show button if app is already installed or not installable
   if (isInstalled || !isInstallable) {
