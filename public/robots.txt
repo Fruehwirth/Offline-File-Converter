@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Sitemap: https://localconvert.com/sitemap.xml
+
+# Block bots that don't respect robots.txt
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+

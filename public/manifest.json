@@ -1,7 +1,7 @@
 {
-  "name": "LocalConvert",
+  "name": "LocalConvert - Free Online File Converter",
   "short_name": "LocalConvert",
-  "description": "Privacy-first file converter. Convert files locally in your browser with no uploads or tracking.",
+  "description": "Privacy-focused, open-source file converter with zero uploads",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
