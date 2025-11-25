@@ -45,7 +45,7 @@ export function Header({ showFilesHeader = false }: HeaderProps) {
               </svg>
             </div>
             <div>
-              <h1 className="header__title">LocalConvert</h1>
+              <h1 className="header__title">LocalConvert.org</h1>
               <p className="header__subtitle">100% local, privacy-first</p>
             </div>
           </div>
