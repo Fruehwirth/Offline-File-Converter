@@ -4,6 +4,7 @@
  */
 
 import { SettingsModal } from './SettingsModal'
+import { InstallButton } from './InstallButton'
 import { useConversionStore } from '../features/state/useConversionStore'
 
 interface HeaderProps {
@@ -51,6 +52,7 @@ export function Header({ showFilesHeader = false }: HeaderProps) {
           </div>
 
           <div className="header__actions">
+            <InstallButton />
             <SettingsModal />
           </div>
         </div>
