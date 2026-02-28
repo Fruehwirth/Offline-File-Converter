@@ -9,6 +9,7 @@ import type {
   ImageConversionMessage,
   ImageConversionResponse,
 } from '../workers/imageProcessing.worker'
+import heic2any from 'heic2any'
 
 export interface ImageProcessingOptions {
   quality?: number // 0-1 for lossy formats
@@ -37,10 +38,24 @@ export async function convertImage(
   }
 
   // Read file as ArrayBuffer
-  const fileData = await file.arrayBuffer()
+  let fileData = await file.arrayBuffer()
 
   // Determine source format from file
-  const sourceFormat = file.type.split('/')[1] || 'png'
+  let sourceFormat = file.type.split('/')[1] || 'png'
+
+  // HEIC/HEIF is not supported natively by browsers — decode to PNG first
+  const isHeic =
+    sourceFormat === 'heic' ||
+    sourceFormat === 'heif' ||
+    file.name.toLowerCase().endsWith('.heic') ||
+    file.name.toLowerCase().endsWith('.heif')
+  if (isHeic) {
+    const heicBlob = new Blob([fileData], { type: 'image/heic' })
+    const decoded = await heic2any({ blob: heicBlob, toType: 'image/png' })
+    const pngBlob = Array.isArray(decoded) ? decoded[0] : decoded
+    fileData = await pngBlob.arrayBuffer()
+    sourceFormat = 'png'
+  }
 
   return new Promise((resolve, reject) => {
     // Create worker
