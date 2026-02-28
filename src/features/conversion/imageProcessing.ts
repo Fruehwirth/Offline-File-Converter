@@ -9,7 +9,6 @@ import type {
   ImageConversionMessage,
   ImageConversionResponse,
 } from '../workers/imageProcessing.worker'
-import heic2any from 'heic2any'
 
 export interface ImageProcessingOptions {
   quality?: number // 0-1 for lossy formats
@@ -50,6 +49,7 @@ export async function convertImage(
     file.name.toLowerCase().endsWith('.heic') ||
     file.name.toLowerCase().endsWith('.heif')
   if (isHeic) {
+    const { default: heic2any } = await import('heic2any')
     const heicBlob = new Blob([fileData], { type: 'image/heic' })
     const decoded = await heic2any({ blob: heicBlob, toType: 'image/png' })
     const pngBlob = Array.isArray(decoded) ? decoded[0] : decoded
